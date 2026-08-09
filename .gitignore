@@ -5,20 +5,8 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 
-# Local configuration and secrets
-.env
-.env.*
-!.env.example
-
-# Data and generated outputs
-data/raw/*
-data/interim/*
-data/processed/*
-output/*
+# Runtime logs
 logs/*
-*.dta
-*.sqlite
-*.db
 
 # OS and editor files
 .DS_Store
