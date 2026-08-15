@@ -11,12 +11,13 @@
 ## 当前状态
 
 - 阶段：材料审阅与总体规划阶段，项目开发入口尚未开启。
-- 正式总体计划：[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) v1.2，是本项目唯一正式总体计划。
+- 正式总体计划：[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) v1.3，是本项目唯一正式总体计划。
 - 总体方案：已确认保留“8行业框架＋2行业深验”；铜产业为第一深验行业，第二深验行业待配套模拟数据审计、正式标准和评审需要进一步确认。
 - 配套数据：命题方配套模拟数据已经取得，文件保存在本地未跟踪目录；该数据脱敏、模拟生成，仅用于比赛开发测试，不是真实企业业务数据。
 - 数据缺口：当前仍未取得独立数据字典、训练/测试划分和正式评分标签；不得据此宣称模型效果、评分结果或真实企业结论。
 - 工作簿分工：`基本信息`、`能耗信息`、`补充信息`为主要输入；`转型目录`为规则与知识来源；`转型规划结论`为参考结论和验证对照，不得作为同一模型输入特征。
 - 03初步审计：已归档企业表主键闭合、缺失/重复、单位观察、语义一致性、目录覆盖缺口和泄漏风险；详见 [`docs/DATA_PROFILE.md`](docs/DATA_PROFILE.md)。候选数据契约详见 [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md)，其中宽转长、缺失等级、目录ID和质量阻断规则仍待若翎确认。
+- 02开发指导：[`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md) v0.1 已发布，明确获得授权后的第一里程碑闭环、验收标准、接口边界和参考结论隔离要求；尚未收到“开始开发MVP”，不代表已经开始编程。
 - 公开边界：原始配套数据、ZIP和解压目录由`.gitignore`排除，不上传公开GitHub。
 - 开发授权：只有收到完全一致的口令“开始开发MVP”后，才进入程序开发阶段。
 
@@ -57,6 +58,7 @@
 - [`docs/DATA_PROFILE.md`](docs/DATA_PROFILE.md)：03配套数据初步画像、事实性审计结果和缺口。
 - [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md)：初步审计后的候选数据契约，待确认，不是程序实现规范。
 - [`docs/DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md`](docs/DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md)：审计复核、问题完善顺序和流程软件准备清单。
+- [`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md)：02软件开发的当前开发指导、第一里程碑和验收标准。
 - [`docs/TEAM_ROLES.md`](docs/TEAM_ROLES.md)：固定Codex对话、5人动态分工和成果审查机制。
 - [`docs/TASK_BOARD.md`](docs/TASK_BOARD.md)：可选的简要待办清单，不是任务启动前置条件。
 - [`docs/SYNC_WORKFLOW.md`](docs/SYNC_WORKFLOW.md)：单向GitHub、成员直接交付和项目总控接收流程。

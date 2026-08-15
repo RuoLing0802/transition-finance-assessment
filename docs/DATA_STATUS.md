@@ -1,6 +1,6 @@
 # 数据状态与数据治理边界
 
-**版本**：v0.7
+**版本**：v0.8
 **日期**：2026-08-15
 **状态**：命题方配套模拟数据已取得；独立数据字典、训练/测试划分和正式评分标签尚未取得
 **负责人**：`03_数据、政策与评分体系`负责分析；若翎和`01_项目总控与决策`负责正式确认与文档集成
@@ -17,7 +17,7 @@
 
 原始工作簿、外层ZIP和解压目录已由`.gitignore`排除，仅保存在本地受控目录，不上传公开GitHub。
 
-正式数据接收登记不等于完成完整数据质量审计，也不授权软件开发。03已提交初步审计结果，事实性归档见 [`DATA_PROFILE.md`](DATA_PROFILE.md)，候选契约见 [`DATA_CONTRACT.md`](DATA_CONTRACT.md)，审计复核和流程准备见 [`DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md`](DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md)。
+正式数据接收登记不等于完成完整数据质量审计，也不授权软件开发。03已提交初步审计结果，事实性归档见 [`DATA_PROFILE.md`](DATA_PROFILE.md)，候选契约见 [`DATA_CONTRACT.md`](DATA_CONTRACT.md)，审计复核和流程准备见 [`DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md`](DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md)。获得开发授权后，02以 [`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) 执行第一阶段闭环；其中三张企业表是程序输入，`转型目录`为规则与知识来源，`转型规划结论`只作参考对照，不得回流为模型输入。
 
 配套数据是否完成接收登记不改变完整“8行业框架＋2行业深验”MVP范围，也不替代精确开发口令“开始开发MVP”。
 
