@@ -173,6 +173,7 @@ MVP必须完整保留以下范围，不得因单个成员开发压力而删除�
 - [`DATA_STATUS.md`](DATA_STATUS.md)：数据状态、字段建议和审计流程。
 - [`DATA_PROFILE.md`](DATA_PROFILE.md)：配套数据初步画像与事实性审计归档。
 - [`DATA_CONTRACT.md`](DATA_CONTRACT.md)：初步审计后的候选数据契约与待确认项。
+- [`DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md`](DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md)：审计复核、问题完善顺序和流程软件准备清单。
 - [`TEAM_ROLES.md`](TEAM_ROLES.md)：固定Codex对话、5人动态分工和成果审查机制。
 - [`TASK_BOARD.md`](TASK_BOARD.md)：可选的简要待办清单。
 - [`SKILLS_MANIFEST.md`](SKILLS_MANIFEST.md)：Skills清单、作用和替代方案。

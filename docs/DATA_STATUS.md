@@ -17,7 +17,7 @@
 
 原始工作簿、外层ZIP和解压目录已由`.gitignore`排除，仅保存在本地受控目录，不上传公开GitHub。
 
-正式数据接收登记不等于完成完整数据质量审计，也不授权软件开发。03已提交初步审计结果，事实性归档见 [`DATA_PROFILE.md`](DATA_PROFILE.md)，候选契约见 [`DATA_CONTRACT.md`](DATA_CONTRACT.md)。
+正式数据接收登记不等于完成完整数据质量审计，也不授权软件开发。03已提交初步审计结果，事实性归档见 [`DATA_PROFILE.md`](DATA_PROFILE.md)，候选契约见 [`DATA_CONTRACT.md`](DATA_CONTRACT.md)，审计复核和流程准备见 [`DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md`](DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md)。
 
 配套数据是否完成接收登记不改变完整“8行业框架＋2行业深验”MVP范围，也不替代精确开发口令“开始开发MVP”。
 

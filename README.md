@@ -56,6 +56,7 @@
 - [`docs/DATA_STATUS.md`](docs/DATA_STATUS.md)：正式数据状态、需求和审计流程。
 - [`docs/DATA_PROFILE.md`](docs/DATA_PROFILE.md)：03配套数据初步画像、事实性审计结果和缺口。
 - [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md)：初步审计后的候选数据契约，待确认，不是程序实现规范。
+- [`docs/DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md`](docs/DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md)：审计复核、问题完善顺序和流程软件准备清单。
 - [`docs/TEAM_ROLES.md`](docs/TEAM_ROLES.md)：固定Codex对话、5人动态分工和成果审查机制。
 - [`docs/TASK_BOARD.md`](docs/TASK_BOARD.md)：可选的简要待办清单，不是任务启动前置条件。
 - [`docs/SYNC_WORKFLOW.md`](docs/SYNC_WORKFLOW.md)：单向GitHub、成员直接交付和项目总控接收流程。
