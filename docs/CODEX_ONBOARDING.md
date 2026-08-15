@@ -22,12 +22,14 @@
 5. docs/PROJECT_PLAN.md
 6. docs/DECISIONS.md
 7. docs/DATA_STATUS.md
-8. docs/TEAM_ROLES.md
-9. docs/SYNC_WORKFLOW.md
-10. docs/CODEX_ONBOARDING.md
-11. docs/TASK_BOARD.md和handoffs/README.md（工具可选，但接入时阅读说明）
-12. docs/SKILLS_MANIFEST.md
-13. 企业转型金融智能评估系统-项目统领提示词-计划模式.md（历史规划输入，仅作追溯，不重新执行）
+8. docs/DATA_PROFILE.md（如本轮涉及配套数据）
+9. docs/DATA_CONTRACT.md（候选契约，先看待确认项）
+10. docs/TEAM_ROLES.md
+11. docs/SYNC_WORKFLOW.md
+12. docs/CODEX_ONBOARDING.md
+13. docs/TASK_BOARD.md和handoffs/README.md（工具可选，但接入时阅读说明）
+14. docs/SKILLS_MANIFEST.md
+15. 企业转型金融智能评估系统-项目统领提示词-计划模式.md（历史规划输入，仅作追溯，不重新执行）
 
 阅读后，作为吴、钟、刘、夏成员Codex时，可以按若翎安排完成分析、建议或本地成果文件，但不得直接覆盖正式治理文档或若翎正在开发的正式代码，也不得提交或推送Git。当前只有在若翎明确发送完全一致的口令“开始开发MVP”后，`02_软件开发`才允许编写程序、制作网页或桌面软件、安装依赖、修改开发环境或启动程序开发型子Agent。其他对话仍按各自职责工作。
 
