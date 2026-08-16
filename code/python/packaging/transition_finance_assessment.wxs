@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Transition Finance Assessment" Manufacturer="Transition Finance Assessment" Version="0.1.0.0" UpgradeCode="7A4B7741-5E75-4C75-8AF0-4F86E651B1AB" Scope="perUser">
+    <MajorUpgrade DowngradeErrorMessage="已安装更高版本的企业转型金融评估。" />
+    <MediaTemplate EmbedCab="yes" />
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="TransitionFinanceAssessment" />
+    </StandardDirectory>
+    <Feature Id="MainFeature" Title="企业转型金融评估" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <Component Id="ApplicationShortcut" Directory="INSTALLFOLDER">
+        <Shortcut Id="ApplicationStartMenuShortcut" Name="企业转型金融评估" Target="[#TransitionFinanceAssessment.exe]" WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\TransitionFinanceAssessment" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </Feature>
+  </Package>
+  <!-- HARVESTED_COMPONENTS -->
+</Wix>

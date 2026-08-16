@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#123f3e" />
+    <title>碳迹可循 · 转型金融评估工作台</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+        --ink: #193330;
+        --ink-soft: #35534e;
+        --muted: #60746e;
+        --muted-light: #8ca19a;
+        --paper: #f4f5f0;
+        --panel: #ffffff;
+        --panel-soft: #f8faf7;
+        --mist: #e8efeb;
+        --line: #d5e0da;
+        --line-strong: #c0d0c8;
+        --deep: #123f3e;
+        --deep-2: #1d5551;
+        --teal: #0e7772;
+        --teal-soft: #dff0eb;
+        --leaf: #cde9a3;
+        --leaf-deep: #7d9f58;
+        --amber: #b9783f;
+        --amber-soft: #fff2de;
+        --danger: #b95c59;
+        --danger-soft: #fce9e6;
+        --shadow-shell: 0 24px 70px rgba(24, 55, 48, .11);
+        --shadow-panel: 0 10px 28px rgba(24, 55, 48, .055);
+        --ease-out: cubic-bezier(.23, 1, .32, 1);
+        --ease-in-out: cubic-bezier(.77, 0, .175, 1);
+      }
+
+      * { box-sizing: border-box; }
+      html { min-width: 320px; background: var(--paper); }
+      body { min-width: 320px; min-height: 100vh; margin: 0; color: var(--ink); background: var(--paper); font-size: 15px; line-height: 1.55; }
+      body::selection { color: var(--deep); background: var(--leaf); }
+      button, input, select, textarea { font: inherit; }
+      button, label[for] { cursor: pointer; }
+      button:disabled { cursor: not-allowed; opacity: .5; }
+      button:active:not(:disabled), label[for]:active { transform: scale(.98); }
+      button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, label[for]:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+      ::-webkit-scrollbar { width: 10px; height: 10px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 99px; background: #b8c9c1; background-clip: padding-box; }
+      ::-webkit-scrollbar-thumb:hover { background: #8eaaa0; background-clip: padding-box; }
+
+      .icon { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+      .icon.small { width: 15px; height: 15px; }
+      .icon.large { width: 22px; height: 22px; }
+
+      .app-shell { min-height: 100vh; display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--paper); }
+      .task-rail { min-height: 100vh; display: flex; flex-direction: column; padding: 24px 16px 18px; color: #edf7f1; background: var(--deep); }
+      .brand { display: flex; align-items: center; gap: 12px; margin: 0 8px 30px; }
+      .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 13px 13px 13px 4px; color: var(--deep); background: var(--leaf); box-shadow: 0 8px 20px rgba(0, 0, 0, .12); }
+      .brand-mark .icon { width: 23px; height: 23px; stroke-width: 2.2; }
+      .brand h1 { margin: 0; color: #fbfff9; font-size: 20px; font-weight: 700; letter-spacing: -.035em; line-height: 1.15; }
+      .brand p { margin: 4px 0 0; color: #a8c8bd; font-size: 10px; letter-spacing: .08em; }
+      .rail-label { margin: 0 8px 8px; color: #9dbab0; font-size: 12px; font-weight: 600; }
+      .workspace-select, .workspace-name { width: 100%; min-height: 44px; border: 1px solid #3b6862; border-radius: 10px; padding: 10px 12px; color: #f5fbf6; background: #1d4e4b; outline: none; }
+      .workspace-select option { color: var(--ink); background: #fff; }
+      .workspace-select:focus, .workspace-name:focus { border-color: var(--leaf); box-shadow: 0 0 0 3px rgba(205, 233, 163, .16); }
+      .workspace-create { display: grid; grid-template-columns: 1fr 44px; gap: 8px; margin: 8px 0 18px; }
+      .workspace-name::placeholder { color: #a8c8bd; }
+      .icon-button { display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 1px solid transparent; border-radius: 10px; color: var(--deep); background: var(--leaf); transition: transform 160ms var(--ease-out), background-color 180ms ease, box-shadow 180ms ease; }
+      .icon-button:hover { background: #d9f0b6; box-shadow: 0 8px 18px rgba(0, 0, 0, .12); }
+      .new-run-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 46px; border: 1px solid #8db65e; border-radius: 11px; color: var(--deep); background: var(--leaf); font-weight: 700; transition: transform 160ms var(--ease-out), box-shadow 180ms ease, background-color 180ms ease; }
+      .new-run-button:hover { background: #d9f0b6; box-shadow: 0 10px 20px rgba(0, 0, 0, .12); }
+      .rail-section { margin-top: 28px; }
+      .rail-section-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 0 8px 8px; }
+      .run-count { display: inline-flex; min-width: 22px; height: 22px; align-items: center; justify-content: center; border-radius: 99px; color: #cde9a3; background: #285b57; font-size: 12px; }
+      .run-list { min-height: 44px; max-height: 46vh; overflow: auto; padding-right: 2px; }
+      .run-item { width: 100%; display: block; margin: 5px 0; padding: 12px; border: 1px solid transparent; border-radius: 12px; color: #d9e9e2; background: transparent; text-align: left; transition: transform 160ms var(--ease-out), background-color 180ms ease, border-color 180ms ease; }
+      .run-item:hover { transform: translateX(2px); background: #1d4e4b; }
+      .run-item.active { border-color: #5e938a; color: #fff; background: #285b57; box-shadow: inset 3px 0 var(--leaf); }
+      .run-item strong, .run-item span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .run-item strong { font-size: 14px; font-weight: 700; }
+      .run-item span { margin-top: 5px; color: #a8c8bd; font-size: 12px; }
+      .rail-footer { display: grid; gap: 14px; margin-top: auto; padding: 17px 8px 0; border-top: 1px solid #37645f; }
+      .simulation-note { display: flex; gap: 8px; color: #a8c8bd; font-size: 12px; line-height: 1.5; }
+      .simulation-note .icon { color: var(--leaf); margin-top: 2px; }
+      .admin-entry { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px 10px; border: 1px solid #37645f; border-radius: 10px; color: #c9ddd5; background: transparent; font-size: 12px; transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease; }
+      .admin-entry:hover { color: #fff; border-color: #6b9c91; background: #1d4e4b; }
+
+      .main-stage { min-width: 0; min-height: 100vh; padding: 22px 28px 52px; }
+      .main-inner { width: min(1540px, 100%); margin: 0 auto; }
+      .app-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; min-height: 60px; margin-bottom: 18px; }
+      .header-copy h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.025em; line-height: 1.25; }
+      .header-copy p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+      .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+      .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 14px; border: 1px solid transparent; border-radius: 10px; color: #fff; background: var(--teal); font-weight: 700; line-height: 1.2; transition: transform 160ms var(--ease-out), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, color 180ms ease; }
+      .button:hover:not(:disabled) { background: #086660; box-shadow: 0 8px 18px rgba(25, 51, 48, .13); }
+      .button.secondary { color: var(--deep); background: var(--mist); }
+      .button.secondary:hover:not(:disabled) { background: #dce9e3; }
+      .button.ghost { color: var(--teal); border-color: var(--line); background: transparent; }
+      .button.ghost:hover:not(:disabled) { border-color: #9cbcb2; background: #eef5f1; box-shadow: none; }
+      .button.amber { color: #5e371a; background: #f0c98f; }
+      .button.amber:hover:not(:disabled) { background: #f5d7a9; }
+      .button.small { min-height: 38px; padding: 7px 11px; font-size: 13px; }
+
+      .context-bar { display: flex; justify-content: space-between; align-items: center; gap: 20px; min-height: 104px; margin-bottom: 14px; padding: 21px 24px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(120deg, #fbfcf9, #edf5ef); box-shadow: var(--shadow-panel); }
+      .context-title { min-width: 0; }
+      .context-title h1 { margin: 0; font-size: clamp(24px, 2.4vw, 32px); font-weight: 750; letter-spacing: -.045em; line-height: 1.15; }
+      .context-title p { max-width: 70ch; margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+      .context-meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; max-width: 48%; }
+      .pill, .tag { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 5px 9px; border-radius: 99px; color: #356a63; background: var(--teal-soft); font-size: 12px; font-weight: 700; white-space: nowrap; }
+      .pill.amber, .tag.warning { color: #87501f; background: var(--amber-soft); }
+      .pill.dark { color: #def0ad; background: var(--deep); }
+      .tag.error { color: #a54f4c; background: var(--danger-soft); }
+      .boundary-note { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 17px; padding: 10px 13px; border: 1px solid #eadabb; border-radius: 11px; color: #79572e; background: #fffaf0; font-size: 13px; line-height: 1.5; }
+      .boundary-note .icon { flex: 0 0 auto; color: var(--amber); margin-top: 2px; }
+      .boundary-note strong { color: #5e401f; }
+
+      .workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr) 352px; gap: 18px; align-items: start; }
+      .conversation-column, .insight-column { min-width: 0; }
+      .panel { min-width: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); box-shadow: var(--shadow-panel); }
+      .panel + .panel { margin-top: 18px; }
+      .panel-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 21px 22px 16px; }
+      .panel-header h2, .panel-header h3 { margin: 0; color: var(--ink); font-size: 20px; font-weight: 700; letter-spacing: -.025em; line-height: 1.25; }
+      .panel-header p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+      .panel-content { padding: 0 22px 22px; }
+      .conversation-panel { min-height: 560px; display: flex; flex-direction: column; }
+      .conversation-panel .panel-content { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+      .conversation-welcome { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; padding: 14px; border-radius: 12px; color: var(--ink-soft); background: var(--panel-soft); }
+      .assistant-mark { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 11px 11px 11px 3px; color: var(--deep); background: var(--leaf); }
+      .assistant-mark .icon { width: 18px; height: 18px; }
+      .conversation-welcome strong { display: block; color: var(--ink); font-size: 14px; }
+      .conversation-welcome span { display: block; margin-top: 3px; font-size: 13px; line-height: 1.5; }
+      .dropzone { display: flex; align-items: center; gap: 13px; min-height: 82px; padding: 14px; border: 1px dashed #9bb9ad; border-radius: 12px; color: var(--teal); background: #f3f8f3; cursor: pointer; transition: border-color 180ms ease, background-color 180ms ease, transform 160ms var(--ease-out); }
+      .dropzone:hover { border-color: var(--teal); background: #e9f5ec; transform: translateY(-1px); }
+      .dropzone input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+      .drop-icon { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 11px; color: var(--deep); background: var(--leaf); }
+      .dropzone strong, .dropzone span { display: block; }
+      .dropzone strong { color: var(--ink); font-size: 14px; }
+      .dropzone span { margin-top: 3px; color: var(--muted); font-size: 12px; }
+      .status { margin-top: 9px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+      .attachments { margin: 12px 0 10px; }
+      .message-list { display: flex; flex: 1; min-height: 190px; max-height: 420px; flex-direction: column; gap: 12px; overflow: auto; padding: 10px 4px 12px; }
+      .message { max-width: min(78%, 700px); padding: 12px 14px; border: 1px solid #e3ebe6; border-radius: 15px 15px 15px 4px; color: var(--ink-soft); background: #f7faf7; font-size: 14px; line-height: 1.6; animation: message-enter 260ms var(--ease-out) both; }
+      .message.user { align-self: flex-end; border-color: #255f5b; border-radius: 15px 15px 4px 15px; color: #eef9f2; background: var(--deep); }
+      .message small { display: block; margin-bottom: 5px; color: var(--muted); font-size: 12px; font-weight: 700; }
+      .message.user small { color: #b9d9ce; }
+      .message.empty { max-width: none; min-height: 0; align-items: center; justify-content: center; border: 0; padding: 28px 12px; color: var(--muted); background: transparent; text-align: center; box-shadow: none; }
+      .message.empty small { display: none; }
+      .composer { display: flex; gap: 10px; align-items: flex-end; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--mist); }
+      textarea { width: 100%; min-height: 50px; max-height: 150px; resize: vertical; border: 1px solid var(--line-strong); border-radius: 12px; padding: 12px 13px; color: var(--ink); background: #fbfdfb; outline: none; font-size: 15px; line-height: 1.5; transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease; }
+      textarea::placeholder { color: #8c9f98; }
+      textarea:focus, input:focus, select:focus { border-color: #62a49b; box-shadow: 0 0 0 3px rgba(98, 164, 155, .15); background: #fff; }
+      .composer .button { min-width: 92px; }
+
+      .report-panel { overflow: hidden; }
+      .report-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+      .report-list { padding: 0 22px; }
+      .report-item { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 13px 0; border-top: 1px solid var(--mist); }
+      .report-item strong, .report-item span { display: block; }
+      .report-item strong { color: var(--ink); font-size: 14px; }
+      .report-item span { margin-top: 4px; color: var(--muted); font-size: 12px; }
+      .report-preview { margin: 0 22px 22px; padding: 19px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink-soft); background: #fafcf9; white-space: pre-wrap; max-height: 520px; overflow: auto; font: 14px/1.7 "Noto Sans SC", "PingFang SC", sans-serif; }
+      .compare-panel { padding-bottom: 20px; }
+      .compare-summary { padding: 0 22px; }
+
+      .source-panel { padding-bottom: 18px; }
+      .source-panel .panel-header { padding-bottom: 11px; }
+      .source-panel .panel-content { padding-bottom: 0; }
+      .batch-card { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 13px 0 0; border-top: 1px solid var(--mist); }
+      .batch-card strong { display: block; color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
+      .batch-card span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+      .batch-hash { max-width: 100px; color: var(--muted-light); font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      .insight-panel { overflow: hidden; }
+      .insight-panel .panel-header { padding-bottom: 13px; }
+      .insight-panel .panel-content { padding-bottom: 18px; }
+      .enterprise-summary { padding: 13px 14px; border-radius: 12px; color: var(--ink-soft); background: var(--panel-soft); }
+      .enterprise-summary p { margin: 4px 0; font-size: 13px; line-height: 1.6; }
+      .enterprise-summary b { color: var(--teal); }
+      .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 13px; }
+      .metric { min-width: 0; padding: 12px; border: 1px solid var(--mist); border-radius: 11px; background: #fbfdfb; }
+      .metric label { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; }
+      .metric strong { display: block; margin-top: 5px; color: var(--deep); font-size: 22px; font-weight: 750; letter-spacing: -.035em; line-height: 1.1; overflow-wrap: anywhere; }
+      .metric.alert strong { color: var(--amber); }
+      .metric.danger strong { color: var(--danger); font-size: 15px; letter-spacing: 0; }
+      details { border-top: 1px solid var(--mist); }
+      details:first-of-type { border-top: 0; }
+      summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 48px; padding: 9px 0; color: var(--ink); cursor: pointer; font-size: 14px; font-weight: 700; list-style: none; }
+      summary::-webkit-details-marker { display: none; }
+      summary::after { content: "+"; color: var(--muted); font-size: 19px; font-weight: 400; transition: transform 180ms var(--ease-out); }
+      details[open] summary::after { transform: rotate(45deg); }
+      .table-wrap { max-width: 100%; max-height: 285px; overflow: auto; padding-bottom: 10px; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th, td { padding: 9px 7px; border-bottom: 1px solid var(--mist); text-align: left; vertical-align: top; }
+      th { position: sticky; top: 0; z-index: 1; color: var(--muted); background: #f7faf7; font-size: 12px; font-weight: 700; }
+      td { color: var(--ink-soft); line-height: 1.45; }
+      .muted { color: var(--muted); font-size: 13px; line-height: 1.55; }
+      .input-summary { margin: 13px 0; }
+      .data-boundary { display: flex; gap: 7px; align-items: flex-start; margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .data-boundary .icon { flex: 0 0 auto; color: var(--teal); margin-top: 2px; }
+
+      .empty-state { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 26px; align-items: center; min-height: 550px; padding: 52px; border: 1px solid var(--line); border-radius: 18px; background: #fbfcf9; box-shadow: var(--shadow-panel); }
+      .empty-copy { max-width: 650px; }
+      .empty-copy h1 { max-width: 12ch; margin: 0; font-size: clamp(34px, 5vw, 58px); font-weight: 750; letter-spacing: -.065em; line-height: 1.04; }
+      .empty-copy p { max-width: 55ch; margin: 17px 0 25px; color: var(--muted); font-size: 16px; line-height: 1.75; }
+      .empty-actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+      .empty-note { padding: 20px; border-radius: 15px; color: var(--ink-soft); background: var(--mist); }
+      .empty-note strong { display: block; margin-bottom: 8px; color: var(--ink); font-size: 15px; }
+      .empty-note p { margin: 8px 0 0; font-size: 13px; line-height: 1.6; }
+      .empty-note ul { margin: 11px 0 0; padding-left: 19px; color: var(--muted); font-size: 13px; line-height: 1.8; }
+
+      dialog { width: min(590px, calc(100vw - 30px)); max-height: min(760px, calc(100vh - 30px)); padding: 0; border: 1px solid var(--line); border-radius: 18px; color: var(--ink); background: var(--paper); box-shadow: 0 32px 100px rgba(9, 38, 37, .28); }
+      dialog::backdrop { background: rgba(12, 38, 39, .52); backdrop-filter: blur(5px); }
+      .dialog-body { padding: 25px; }
+      .dialog-body h2 { margin: 0; font-size: 24px; font-weight: 750; letter-spacing: -.04em; line-height: 1.15; }
+      .dialog-body p { margin: 9px 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+      .field { margin: 18px 0; }
+      .field label { display: block; margin-bottom: 7px; color: var(--ink-soft); font-size: 13px; font-weight: 700; }
+      .field select, .field input { width: 100%; min-height: 44px; border: 1px solid var(--line-strong); border-radius: 10px; padding: 9px 11px; color: var(--ink); background: #fff; outline: none; }
+      .dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+      .check-list { display: grid; gap: 9px; max-height: 290px; overflow: auto; }
+      .check-row { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 1px solid var(--line); border-radius: 11px; background: #fff; font-size: 13px; }
+      .check-row input { margin-top: 3px; accent-color: var(--teal); }
+      .admin-dialog { width: min(760px, calc(100vw - 30px)); }
+      .admin-panel { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+      .admin-panel[hidden], .admin-login[hidden] { display: none; }
+      .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .admin-block { padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+      .admin-block h3 { margin: 0 0 8px; font-size: 14px; }
+      .admin-block p { margin: 5px 0; font-size: 13px; }
+      .admin-events { max-height: 220px; overflow: auto; margin-top: 10px; padding: 10px; border-radius: 10px; color: #d9ede3; background: #183c3b; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
+      .admin-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+      .admin-controls select { min-width: 220px; min-height: 42px; border: 1px solid var(--line-strong); border-radius: 9px; padding: 8px; color: var(--ink); background: #fff; }
+      .admin-status { margin-top: 9px; padding: 9px 10px; border-radius: 9px; color: var(--ink-soft); background: var(--mist); font-size: 12px; }
+
+      .toast { position: fixed; right: 24px; bottom: 24px; z-index: 20; max-width: min(440px, calc(100vw - 48px)); padding: 13px 16px; border: 1px solid #3b6c65; border-radius: 11px; color: #eff9f1; background: var(--deep); box-shadow: var(--shadow-shell); font-size: 14px; line-height: 1.5; opacity: 0; transform: translateY(12px) scale(.98); pointer-events: none; transition: transform 200ms var(--ease-out), opacity 180ms ease; }
+      .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+      .admin-only { display: none !important; }
+      body.admin-unlocked .admin-only { display: block !important; }
+
+      @keyframes message-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes shell-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+      .task-rail, .main-inner { animation: shell-enter 420ms var(--ease-out) both; }
+      .main-inner { animation-delay: 45ms; }
+
+      /* Readability pass: keep the workbench comfortable at normal viewing distance. */
+      body { font-size: 17px; line-height: 1.65; }
+      .brand p, .rail-label, .run-count, .simulation-note, .admin-entry { font-size: 14px; }
+      .workspace-select, .workspace-name { font-size: 16px; }
+      .run-item strong { font-size: 16px; }
+      .run-item span { font-size: 14px; }
+      .header-copy h2 { font-size: 26px; }
+      .header-copy p { font-size: 16px; }
+      .button { font-size: 16px; }
+      .button.small { font-size: 14px; }
+      .context-title p, .boundary-note { font-size: 16px; }
+      .pill, .tag { min-height: 30px; padding: 5px 10px; font-size: 14px; }
+      .panel-header h2, .panel-header h3 { font-size: 24px; }
+      .panel-header p { font-size: 15px; }
+      .conversation-welcome strong, .dropzone strong, .report-item strong, .batch-card strong { font-size: 16px; }
+      .conversation-welcome span, .dropzone span, .status, .report-item span, .batch-card span { font-size: 14px; }
+      .message { font-size: 16px; }
+      .message small { font-size: 13px; }
+      textarea { font-size: 17px; }
+      .report-preview { font-size: 16px; }
+      .enterprise-summary p, .muted, .data-boundary { font-size: 15px; }
+      .metric label { font-size: 14px; }
+      .metric strong { font-size: 26px; }
+      summary { font-size: 16px; }
+      table { font-size: 14px; }
+      th { font-size: 13px; }
+      .empty-note p, .empty-note ul { font-size: 15px; }
+      .dialog-body p, .field label, .check-row { font-size: 15px; }
+      .admin-block h3 { font-size: 16px; }
+      .admin-block p, .admin-status { font-size: 14px; }
+
+      .conversation-header { align-items: center; }
+      .conversation-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 9px; }
+      .model-picker { display: grid; grid-template-columns: auto minmax(170px, 1fr); gap: 7px; align-items: center; color: var(--muted); font-size: 13px; font-weight: 700; }
+      .model-picker select { min-width: 190px; min-height: 42px; border: 1px solid var(--line-strong); border-radius: 9px; padding: 7px 10px; color: var(--ink); background: #fff; outline: none; font-size: 15px; font-weight: 600; }
+      .model-unavailable { font-size: 14px; }
+      .process-panel { margin: 0 0 10px; border: 1px solid var(--line); border-radius: 12px; background: #f8fbf8; overflow: hidden; }
+      .process-panel summary { min-height: 48px; padding: 10px 13px; }
+      .process-panel summary::after { content: ""; width: 0; height: 0; margin-left: auto; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid currentColor; color: var(--muted); transition: transform 180ms ease; }
+      .process-panel[open] summary::after { transform: rotate(90deg); }
+      .process-summary-title { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+      .process-summary-title .icon { color: var(--teal); }
+      .process-state { color: var(--teal); font-size: 13px; font-weight: 600; }
+      .process-state.busy { color: var(--amber); }
+      .process-steps { display: grid; gap: 8px; padding: 0 13px 10px 39px; }
+      .process-step { position: relative; color: var(--muted); font-size: 14px; line-height: 1.5; }
+      .process-step::before { content: ""; position: absolute; width: 7px; height: 7px; left: -18px; top: .55em; border-radius: 50%; background: #9fb4ac; }
+      .process-step.done::before { background: var(--teal); }
+      .process-step.current { color: var(--ink-soft); }
+      .process-step.current::before { background: var(--amber); animation: process-pulse 1.2s ease-in-out infinite; }
+      .process-note { margin: 0; padding: 0 13px 12px 39px; color: var(--muted-light); font-size: 13px; line-height: 1.45; }
+      @keyframes process-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(185, 120, 63, .18); } 50% { box-shadow: 0 0 0 5px rgba(185, 120, 63, 0); } }
+
+      @media (max-width: 1180px) {
+        .main-stage { padding-right: 20px; padding-left: 20px; }
+        .workspace-grid { grid-template-columns: minmax(0, 1fr) 310px; gap: 14px; }
+        .context-meta { max-width: 44%; }
+      }
+      @media (max-width: 980px) {
+        .app-shell { grid-template-columns: 226px minmax(0, 1fr); }
+        .workspace-grid { grid-template-columns: 1fr; }
+        .insight-column { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+        .insight-column .panel + .panel { margin-top: 0; }
+        .context-bar { align-items: flex-start; }
+        .context-meta { justify-content: flex-start; max-width: none; }
+      }
+      @media (max-width: 720px) {
+        .app-shell { display: block; }
+        .task-rail { min-height: 0; padding: 16px 14px 13px; }
+        .brand { margin-bottom: 18px; }
+        .rail-section { margin-top: 17px; }
+        .run-list { display: flex; max-height: none; gap: 6px; overflow-x: auto; }
+        .run-item { min-width: 190px; margin: 0; }
+        .rail-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 17px; padding-top: 13px; }
+        .simulation-note { max-width: 65%; }
+        .main-stage { padding: 16px 12px 34px; }
+        .app-header { display: block; }
+        .header-actions { justify-content: flex-start; margin-top: 12px; }
+        .context-bar { display: block; padding: 18px; }
+        .context-meta { margin-top: 14px; }
+        .empty-state { display: block; min-height: 0; padding: 32px 22px; }
+        .empty-copy h1 { max-width: 11ch; font-size: 39px; }
+        .empty-note { margin-top: 28px; }
+        .insight-column { display: block; }
+        .insight-column .panel + .panel { margin-top: 14px; }
+        .panel-header { padding: 18px 17px 14px; }
+        .panel-content { padding: 0 17px 18px; }
+        .report-list { padding: 0 17px; }
+        .report-preview { margin-right: 17px; margin-left: 17px; }
+        .message { max-width: 90%; }
+        .composer { display: block; }
+        .composer .button { width: 100%; margin-top: 9px; }
+        .admin-grid { grid-template-columns: 1fr; }
+        .conversation-header { display: block; }
+        .conversation-tools { justify-content: flex-start; margin-top: 13px; }
+        .model-picker { width: 100%; grid-template-columns: auto minmax(0, 1fr); }
+        .model-picker select { min-width: 0; width: 100%; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+        .run-item:hover, .dropzone:hover { transform: none; }
+        .process-step.current::before { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <svg aria-hidden="true" width="0" height="0" style="position:absolute">
+      <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M20 4C11 4 5 8.5 5 15.5 5 18 7 20 9.5 20 16.5 20 20 13 20 4Z"/><path d="M4 21c3-5 7-8 12-11"/></symbol>
+      <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></symbol>
+      <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></symbol>
+      <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></symbol>
+      <symbol id="icon-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+      <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+      <symbol id="icon-send" viewBox="0 0 24 24"><path d="m4 4 16 8-16 8 3-8-3-8Z"/><path d="M7 12h13"/></symbol>
+      <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14-4L4 9"/><path d="M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2"/><path d="M20 20v-5h-5"/></symbol>
+      <symbol id="icon-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+      <symbol id="icon-report" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+      <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="m7 15 3-4 3 2 5-6"/></symbol>
+    </svg>
+
+    <div class="app-shell">
+      <aside class="task-rail" aria-label="评估任务导航">
+        <div class="brand">
+          <div class="brand-mark"><svg class="icon"><use href="#icon-leaf"></use></svg></div>
+          <div><h1>碳迹可循</h1><p>转型金融评估工作台</p></div>
+        </div>
+
+        <div class="rail-label">当前工作空间</div>
+        <select id="workspaceSelect" class="workspace-select" aria-label="选择工作空间"><option value="">尚未创建工作空间</option></select>
+        <div class="workspace-create">
+          <input id="workspaceName" class="workspace-name" type="text" placeholder="新工作空间名称" maxlength="120" aria-label="新工作空间名称" />
+          <button id="createWorkspace" class="icon-button" type="button" title="创建工作空间" aria-label="创建工作空间"><svg class="icon"><use href="#icon-plus"></use></svg></button>
+        </div>
+        <button id="newRun" class="new-run-button" type="button"><svg class="icon"><use href="#icon-plus"></use></svg>新增企业评估</button>
+
+        <div class="rail-section">
+          <div class="rail-section-header"><span class="rail-label" style="margin:0">评估任务</span><span id="runCount" class="run-count">0</span></div>
+          <div id="runList" class="run-list"><p class="muted">创建工作空间后开始。</p></div>
+        </div>
+
+        <div class="rail-footer">
+          <div class="simulation-note"><svg class="icon small"><use href="#icon-info"></use></svg><span>当前数据为命题方脱敏模拟数据，仅用于比赛开发测试。</span></div>
+          <button id="adminEntry" class="admin-entry" type="button"><svg class="icon small"><use href="#icon-lock"></use></svg>团队管理员入口</button>
+        </div>
+      </aside>
+
+      <main class="main-stage">
+        <div class="main-inner">
+          <header class="app-header">
+            <div class="header-copy"><h2>企业评估工作台</h2><p>从数据到证据，再到一份可以复核的基础报告。</p></div>
+            <div class="header-actions">
+              <button id="compareButton" class="button ghost" type="button" disabled><svg class="icon small"><use href="#icon-chart"></use></svg>比较已完成运行</button>
+              <button id="reportLibraryButton" class="button secondary" type="button" disabled><svg class="icon small"><use href="#icon-report"></use></svg>查看报告输出</button>
+            </div>
+          </header>
+
+          <section id="contextBar" class="context-bar" aria-live="polite">
+            <div class="context-title"><h1 id="contextTitle">尚未选择评估运行</h1><p id="contextSubtitle">先创建工作空间，再上传工作簿并选择一家企业。</p></div>
+            <div id="contextMeta" class="context-meta"><span class="pill amber">等待开始</span></div>
+          </section>
+
+          <div class="boundary-note"><svg class="icon small"><use href="#icon-info"></use></svg><div><strong>数据边界</strong>　命题方脱敏模拟数据，仅用于比赛开发测试。系统展示质量、变化、目录候选与参考对照，不输出正式评分、正式碳排放量或授信结论。</div></div>
+
+          <section id="startState" class="empty-state">
+            <div class="empty-copy">
+              <h1>先把一家企业放到案头上。</h1>
+              <p>建立工作空间，登记一份配套工作簿，再选择一家企业开始评估。一个工作空间可以管理多家企业，但每次评估运行只绑定一家企业。</p>
+              <div class="empty-actions"><button id="startWorkspace" class="button" type="button"><svg class="icon small"><use href="#icon-arrow"></use></svg>创建第一个工作空间</button></div>
+            </div>
+            <div class="empty-note"><strong>这次评估会做什么</strong><p>你可以在同一个工作台里：</p><ul><li>完成五张表校验与企业关联</li><li>查看能耗变化和缺失数据</li><li>匹配转型目录并生成基础报告</li></ul></div>
+          </section>
+
+          <section id="workspaceView" style="display:none;">
+            <div class="workspace-grid">
+              <div class="conversation-column">
+                <section id="messageCard" class="panel conversation-panel" style="display:none;">
+                  <div class="panel-header conversation-header"><div><h2>和这家企业对话</h2><p>围绕当前评估运行提问，助手只读取受控事实和工具结果。</p></div><div class="conversation-tools"><label class="model-picker" for="userModelSelect"><span>回答引擎</span><select id="userModelSelect" aria-label="选择回答引擎"><option value="">读取中……</option></select></label><span id="userModelUnavailable" class="model-unavailable muted" hidden>离线基础流程</span><span class="pill">当前运行</span></div></div>
+                  <div class="panel-content">
+                    <div class="conversation-welcome"><div class="assistant-mark"><svg class="icon"><use href="#icon-leaf"></use></svg></div><div><strong>评估助手已准备好</strong><span>可以问我企业详情、能耗变化、质量提示、目录候选或还需要补充哪些材料。</span></div></div>
+                    <label class="dropzone" for="attachmentFile"><input id="attachmentFile" type="file" accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp,.xlsx" /><span class="drop-icon"><svg class="icon"><use href="#icon-upload"></use></svg></span><span><strong>补充 PDF、DOCX、图片或 XLSX</strong><span>保留证据位置；企业冲突会被阻断并提示人工复核。</span></span></label>
+                    <div id="attachmentStatus" class="status">尚未上传当前运行的补充材料。</div>
+                    <div id="attachments" class="attachments"></div>
+                    <details id="processPanel" class="process-panel" hidden>
+                      <summary><span class="process-summary-title"><svg class="icon small"><use href="#icon-refresh"></use></svg><span id="processTitle">处理过程</span><span id="processState" class="process-state">已完成</span></span></summary>
+                      <div id="processSteps" class="process-steps"></div>
+                      <p class="process-note">这里展示可解释的处理摘要，不包含模型私有思维链；规则、质量和证据事实仍由独立模块执行。</p>
+                    </details>
+                    <div id="messages" class="message-list" aria-live="polite"></div>
+                    <div class="composer"><textarea id="messageInput" placeholder="问问当前企业的能耗变化，或者下一步需要补齐什么……" aria-label="向评估助手提问"></textarea><button id="sendMessage" class="button" type="button"><svg class="icon small"><use href="#icon-send"></use></svg>发送</button></div>
+                  </div>
+                </section>
+
+                <section id="reportCard" class="panel report-panel" style="display:none;">
+                  <div class="panel-header"><div><h2>报告输出</h2><p>报告按当前评估运行独立保存，可以预览并继续复核。</p></div><div class="report-actions"><button id="generateReport" class="button amber small" type="button"><svg class="icon small"><use href="#icon-report"></use></svg>生成基础报告</button><button id="completeRun" class="button secondary small" type="button" style="display:none;">标记已完成</button></div></div>
+                  <div id="reports" class="report-list"></div>
+                  <pre id="reportPreview" class="report-preview" style="display:none;"></pre>
+                </section>
+
+                <section id="compareCard" class="panel compare-panel" style="display:none;">
+                  <div class="panel-header"><div><h2>运行对照</h2><p>显示报告期、批次、规则版本和不可比原因，不生成企业排名。</p></div></div>
+                  <div id="compareSummary" class="compare-summary"></div>
+                </section>
+              </div>
+
+              <aside class="insight-column" aria-label="当前企业信息">
+                <section id="batchCard" class="panel source-panel">
+                  <div class="panel-header"><div><h3>数据来源</h3><p>一次登记，多个企业运行可复用。</p></div><svg class="icon" style="color:var(--teal)"><use href="#icon-file"></use></svg></div>
+                  <div class="panel-content">
+                    <label class="dropzone" for="file"><input id="file" type="file" accept=".xlsx" /><span class="drop-icon"><svg class="icon"><use href="#icon-upload"></use></svg></span><span><strong>上传配套工作簿</strong><span>五张表校验 · 企业代号关联</span></span></label>
+                    <div id="batchStatus" class="status">尚未登记数据批次。</div>
+                    <div id="batchSummary" style="display:none;"></div>
+                  </div>
+                </section>
+
+                <section id="runView" class="panel insight-panel" style="display:none;">
+                  <div class="panel-header"><div><h3 id="runHeading">企业侧写</h3><p id="runHint" class="muted"></p></div><span class="pill">事实摘要</span></div>
+                  <div class="panel-content">
+                    <div id="metrics" class="metrics"></div>
+                    <div id="enterpriseSummary" class="enterprise-summary input-summary"></div>
+                    <div class="data-boundary"><svg class="icon small"><use href="#icon-info"></use></svg><span>企业事实来自当前运行绑定的批次；转型规划结论保持独立参考层。</span></div>
+                    <details open><summary>质量信号与缺失数据</summary><div id="issues" class="table-wrap"></div></details>
+                    <details><summary>2024—2025 能耗变化</summary><div id="trend" class="table-wrap"></div></details>
+                    <details><summary>转型目录候选</summary><div id="catalog" class="table-wrap"></div></details>
+                    <details><summary>参考结论对照</summary><div id="reference" class="table-wrap"></div></details>
+                  </div>
+                </section>
+              </aside>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <dialog id="runDialog"><div class="dialog-body"><h2>新增企业评估</h2><p>从当前已登记的数据批次中选择一家企业。系统会创建新的评估运行，不会把事实写入现有运行。</p><div class="field"><label for="enterpriseSelect">评估企业</label><select id="enterpriseSelect"><option>请先上传工作簿</option></select></div><div class="field"><label for="runName">运行名称</label><input id="runName" value="企业评估" maxlength="120" /></div><div class="dialog-actions"><button id="cancelRun" class="button ghost" type="button">取消</button><button id="confirmRun" class="button" type="button">创建并切换</button></div></div></dialog>
+    <dialog id="compareDialog"><div class="dialog-body"><h2>比较已完成运行</h2><p>至少选择两个已完成或已归档运行。系统会显示报告期、批次、规则版本和质量门差异，不计算排名。</p><div id="compareChoices" class="check-list"></div><div id="compareResult" class="compare-result"></div><div class="dialog-actions"><button id="cancelCompare" class="button ghost" type="button">关闭</button><button id="confirmCompare" class="button" type="button">生成对比视图</button></div></div></dialog>
+    <dialog id="adminDialog" class="admin-dialog"><div class="dialog-body"><div class="admin-login" id="adminLogin"><h2>团队管理员入口</h2><p>这里仅显示模型、工具和审计诊断。普通用户界面不会展示这些内部信息。</p><div class="field"><label for="adminPassword">管理员口令</label><input id="adminPassword" type="password" autocomplete="current-password" placeholder="输入受控环境配置的管理员口令" /></div><div id="adminLoginStatus" class="status" aria-live="polite"></div><div class="dialog-actions"><button id="closeAdminLogin" class="button ghost" type="button">取消</button><button id="adminLoginButton" class="button" type="button">验证并进入</button></div></div><div class="admin-panel" id="adminPanel" hidden><h2>运行诊断</h2><p>管理员视图。规则、质量、评分和证据事实仍由独立回放模块执行。</p><div class="admin-grid"><div class="admin-block"><h3>模型能力</h3><div class="admin-controls"><select id="modelSelect" aria-label="会话模型"></select><span id="modelUnavailable" class="muted">未配置外部模型</span></div><div id="modelStatus" class="admin-status">模型能力读取中……</div></div><div class="admin-block"><h3>当前运行</h3><p id="adminRunSummary" class="muted">尚未选择评估运行。</p><div class="admin-controls"><button id="stopConversation" class="button ghost small" type="button"><svg class="icon small"><use href="#icon-stop"></use></svg>停止</button><button id="retryConversation" class="button ghost small" type="button"><svg class="icon small"><use href="#icon-refresh"></use></svg>重试</button></div></div></div><div class="admin-block" style="margin-top:12px"><h3>审计事件（当前运行）</h3><div id="adminEvents" class="admin-events">选择一个评估运行后加载。</div></div><div class="dialog-actions"><button id="adminLogout" class="button ghost" type="button">退出管理员视图</button><button id="closeAdminPanel" class="button" type="button">关闭</button></div></div></div></dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const state = { workspaceId: null, workspaceName: "", sourceBatch: null, batchSummary: null, runs: [], currentRunId: null, currentRun: null, analysis: null, messages: [], reports: [], attachments: [], comparison: null, models: [], processEvents: [], processing: false, adminUnlocked: false, adminToken: null };
+      const $ = (id) => document.getElementById(id);
+      const icon = (name, className = "icon small") => `<svg class="${className}" aria-hidden="true"><use href="#icon-${name}"></use></svg>`;
+      const esc = (value) => String(value ?? "—").replace(/[&<>'"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]));
+      const tag = (value, tone = "") => `<span class="tag ${tone}">${esc(value)}</span>`;
+      const statusText = { draft: "草稿", report_ready: "报告已就绪", completed: "已完成", archived: "已归档", failed: "失败", needs_review: "待复核", passed: "解析通过", blocked_conflict: "企业冲突已阻断" };
+      const statusLabel = (value) => statusText[value] || value || "—";
+
+      function toast(message) { $("toast").textContent = message; $("toast").classList.add("show"); window.clearTimeout(window.__toast); window.__toast = window.setTimeout(() => $("toast").classList.remove("show"), 3600); }
+      async function api(url, options = {}) { const response = await fetch(url, options); const body = await response.json(); if (!response.ok) throw new Error(typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail || "请求失败")); return body; }
+
+      async function boot() { try { await loadModelCapabilities(); const body = await api("/api/v1/workspaces"); renderWorkspaces(body.workspaces || []); if (body.workspaces?.length) await selectWorkspace(body.workspaces[0].workspace_id); else showStart(); } catch (error) { toast(`工作空间读取失败：${error.message}`); showStart(); } }
+      function showStart() { $("startState").style.display = "grid"; $("workspaceView").style.display = "none"; $("contextTitle").textContent = "尚未选择评估运行"; $("contextSubtitle").textContent = "先创建工作空间，再上传工作簿并选择一家企业。"; $("contextMeta").innerHTML = '<span class="pill amber">等待开始</span>'; }
+      function renderWorkspaces(workspaces) { const select = $("workspaceSelect"); select.innerHTML = workspaces.length ? workspaces.map(item => `<option value="${esc(item.workspace_id)}">${esc(item.name)}</option>`).join("") : '<option value="">尚未创建工作空间</option>'; if (state.workspaceId) select.value = state.workspaceId; }
+      async function createWorkspace() { const name = $("workspaceName").value.trim() || "转型金融评估工作台"; try { const workspace = await api("/api/v1/workspaces", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) }); $("workspaceName").value = ""; state.workspaceId = workspace.workspace_id; await loadWorkspaceList(); await selectWorkspace(workspace.workspace_id); toast("工作空间已创建"); } catch (error) { toast(`创建失败：${error.message}`); } }
+      async function loadWorkspaceList() { const body = await api("/api/v1/workspaces"); renderWorkspaces(body.workspaces || []); }
+      async function selectWorkspace(workspaceId) { if (!workspaceId) return showStart(); state.workspaceId = workspaceId; $("workspaceSelect").value = workspaceId; const workspace = await api(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}`); state.workspaceName = workspace.name; $("startState").style.display = "none"; $("workspaceView").style.display = "block"; const body = await api(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/runs`); state.runs = body.runs || []; const comparisons = await api(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/comparison-views`); state.comparison = comparisons.comparisons?.[0] || null; renderRuns(); renderComparison(); if (state.runs.length) await switchRun(state.runs.find(run => run.assessment_run_id === workspace.last_active_run_id)?.assessment_run_id || state.runs[0].assessment_run_id); else { state.currentRunId = null; state.currentRun = null; state.analysis = null; renderNoRun(); } }
+      function renderRuns() { $("runCount").textContent = state.runs.length; $("runList").innerHTML = state.runs.length ? state.runs.map(run => `<button class="run-item ${run.assessment_run_id === state.currentRunId ? "active" : ""}" data-run-id="${esc(run.assessment_run_id)}" type="button"><strong>${esc(run.enterprise_code)} · ${esc(run.run_name)}</strong><span>${esc(statusLabel(run.status))}</span></button>`).join("") : '<p class="muted">还没有评估运行。上传批次后点击“新增企业评估”。</p>'; document.querySelectorAll("[data-run-id]").forEach(button => button.addEventListener("click", () => switchRun(button.dataset.runId))); }
+      function renderNoRun() { $("contextTitle").textContent = "等待第一家企业"; $("contextSubtitle").textContent = "上传工作簿后，可以在同一批次中继续创建多个企业运行。"; $("contextMeta").innerHTML = '<span class="pill amber">未绑定企业</span>'; $("runView").style.display = "none"; $("messageCard").style.display = "none"; $("reportCard").style.display = "none"; $("compareCard").style.display = "none"; $("processPanel").hidden = true; $("reportLibraryButton").disabled = true; $("compareButton").disabled = true; updateAdminSummary(); }
+      async function switchRun(runId) { const run = state.runs.find(item => item.assessment_run_id === runId); if (!run) return; state.currentRunId = runId; state.currentRun = run; state.processEvents = []; state.processing = false; renderRuns(); try { state.sourceBatch = await api(`/api/v1/source-batches/${encodeURIComponent(run.source_batch_id)}`); renderSourceBatch(); const detail = await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/company-detail`); state.analysis = detail.analysis; state.messages = (await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/messages`)).messages || []; state.reports = (await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/reports`)).reports || []; state.attachments = (await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/attachments`)).attachments || []; renderCurrent(); if (state.adminUnlocked) loadAdminEvents(); } catch (error) { toast(`运行切换失败：${error.message}`); } }
+
+      function renderCurrent() {
+        const run = state.currentRun; const analysis = state.analysis || {}; const basic = analysis.input_data?.basic_info || {}; const supp = analysis.input_data?.supplement_info || {};
+        $("contextTitle").textContent = `${basic["企业代号"] || run.enterprise_code} · ${basic["行业"] || "企业评估"}`;
+        $("contextSubtitle").textContent = `${run.run_name} · 当前运行只绑定一家企业；同批次可继续创建其他运行。`;
+        $("contextMeta").innerHTML = `${tag(statusLabel(run.status))}<span class="pill dark">${state.models.length ? "助手可用" : "离线流程"}</span><span class="pill">数据已绑定</span>`;
+        $("runView").style.display = "block"; $("messageCard").style.display = "flex"; $("reportCard").style.display = "block"; $("reportLibraryButton").disabled = false; $("compareButton").disabled = state.runs.filter(item => ["completed", "archived"].includes(item.status)).length < 2; $("completeRun").style.display = run.status === "report_ready" ? "inline-flex" : "none";
+        const issues = analysis.quality_issues || []; const comparable = (analysis.energy_trend?.resources || []).filter(item => item.status === "可比较").length;
+        $("metrics").innerHTML = `<div class="metric"><label>绑定企业</label><strong>${esc(run.enterprise_code)}</strong></div><div class="metric"><label>质量问题</label><strong>${esc(issues.length)}</strong></div><div class="metric"><label>年度可比较项</label><strong>${esc(comparable)}</strong></div><div class="metric alert"><label>目录候选</label><strong>${esc(analysis.catalog_matches?.candidates?.length || 0)}</strong></div><div class="metric"><label>参考字段</label><strong>${esc(analysis.reference_comparison?.reference_fields_present || 0)}</strong></div><div class="metric danger"><label>正式评分</label><strong>不输出</strong></div>`;
+        $("runHeading").textContent = `${run.enterprise_code} · 企业侧写`; $("runHint").textContent = supp["主要产品/服务"] ? `主要产品/服务：${supp["主要产品/服务"]}` : "当前运行尚未补充产品信息";
+        $("enterpriseSummary").innerHTML = `<p><b>${esc(basic["企业代号"])}</b> · ${esc(basic["所属地区"])} · ${esc(basic["企业规模"])}</p><p>成立年份 ${esc(basic["成立年份"])}　主要产品/服务：${esc(supp["主要产品/服务"])}</p><p>当前痛点：${esc(supp["当前主要痛点"])}</p>`;
+        renderIssues(issues); renderTrend(analysis.energy_trend || {}); renderCatalog(analysis.catalog_matches || {}); renderReference(analysis.reference_comparison || {}); renderAttachments(); renderMessages(); renderReports(); $("reportPreview").style.display = "none"; updateAdminSummary(); loadProcessSummary({ collapse: true });
+      }
+      function renderIssues(issues) { $("issues").innerHTML = issues.length ? `<table><thead><tr><th>严重度</th><th>字段</th><th>问题</th></tr></thead><tbody>${issues.slice(0, 80).map(item => `<tr><td>${tag(item.severity, item.severity === "error" ? "error" : item.severity === "warning" ? "warning" : "")}</td><td>${esc(item.field)}</td><td>${esc(item.message)}</td></tr>`).join("")}</tbody></table>` : '<p class="muted">当前企业未发现质量问题。</p>'; }
+      function renderTrend(trend) { const rows = [...(trend.resources || []), ...(trend.operating_metrics || [])]; $("trend").innerHTML = rows.length ? `<table><thead><tr><th>指标</th><th>2024</th><th>2025</th><th>变化</th></tr></thead><tbody>${rows.map(item => `<tr><td>${esc(item.name)}<br><span class="muted">${esc(item.unit)}</span></td><td>${esc(item["2024"])}</td><td>${esc(item["2025"])}</td><td>${esc(item.change)}<br>${esc(item.status)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(trend.calculation_note)}</p>` : '<p class="muted">暂未生成年度变化。</p>'; }
+      function renderCatalog(catalog) { const candidates = catalog.candidates || []; $("catalog").innerHTML = candidates.length ? `<p class="muted">${tag(catalog.status)}　${catalog.manual_review_required ? "需要人工复核" : "暂未触发人工复核"}</p><table><thead><tr><th>转型路径</th><th>匹配依据</th></tr></thead><tbody>${candidates.slice(0, 12).map(item => `<tr><td>${esc(item.transition_path)}</td><td>${esc((item.match_reasons || []).join("；"))}</td></tr>`).join("")}</tbody></table>` : `<p class="muted">未生成候选：${esc(catalog.status)}。需要人工复核，不自行补目录。</p>`; }
+      function renderReference(reference) { const items = reference.comparison_items || []; $("reference").innerHTML = `<p class="muted">${tag("独立参考对照")}　泄漏隔离：${tag(reference.leakage_guard?.status || "—")}</p>${items.length ? `<table><thead><tr><th>语义映射</th><th>状态</th></tr></thead><tbody>${items.map(item => `<tr><td>${esc(item.mapping)}</td><td>${esc(item.status)}<br><span class="muted">${esc(item.reason)}</span></td></tr>`).join("")}</tbody></table>` : '<p class="muted">当前批次没有可展示的参考字段。</p>'}`; }
+      function renderMessages() { const visible = state.messages.filter(item => ["user", "assistant"].includes(item.role)); $("messages").innerHTML = visible.length ? visible.map(item => { const user = item.role === "user"; return `<div class="message ${user ? "user" : ""}"><small>${user ? "你" : "评估助手"}</small>${esc(item.content)}</div>`; }).join("") : '<div class="message empty"><small>评估助手</small>你可以从企业详情、能耗变化或缺失数据开始提问。</div>'; $("messages").scrollTop = $("messages").scrollHeight; }
+      const processToolLabels = { get_run_snapshot: "读取当前运行概览", get_company_detail: "读取企业详情", get_energy_trend: "查询能耗变化", get_catalog_matches: "匹配转型目录", list_quality_issues: "检查缺失与数据质量", get_reference_comparison: "准备独立参考对照" };
+      function processStepsFromEvents(steps) { return (steps || []).map(item => ({ label: item.label, status: item.status })); }
+      function renderProcessSteps(steps) { $("processSteps").innerHTML = steps.length ? steps.map(item => `<div class="process-step ${esc(item.status)}">${esc(item.label)}</div>`).join("") : '<div class="process-step">正在整理当前运行的处理摘要。</div>'; }
+      function renderProcessSummary(steps, { open = false, busy = false, title = "处理过程", stateLabel = "已完成" } = {}) { const panel = $("processPanel"); panel.hidden = !steps.length; if (!steps.length) return; $("processTitle").textContent = title; $("processState").textContent = stateLabel; $("processState").classList.toggle("busy", busy); renderProcessSteps(steps); panel.open = open; }
+      function beginProcessSummary() { state.processing = true; renderProcessSummary([{ label: "读取当前企业的受控事实", status: "done" }, { label: "规划回答并检查数据缺口", status: "current" }], { open: true, busy: true, title: "正在处理", stateLabel: "进行中" }); }
+      async function loadProcessSummary({ collapse = false } = {}) { if (!state.currentRunId) return; try { const body = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/conversation/summary`); const steps = processStepsFromEvents(body.steps); if (steps.length) { renderProcessSummary(steps, { open: state.processing || !collapse, busy: state.processing, title: state.processing ? "正在处理" : "处理过程", stateLabel: state.processing ? "进行中" : "已完成" }); } else if (!state.processing) { $("processPanel").hidden = true; } } catch (error) { if (!state.processing) $("processPanel").hidden = true; } }
+      function showProcessFailure(message) { state.processing = false; renderProcessSummary([{ label: message || "处理未完成，请检查提示并重试", status: "error" }], { open: true, title: "处理过程", stateLabel: "需要检查" }); }
+      function renderAttachments() { $("attachments").innerHTML = state.attachments.length ? state.attachments.map(item => { const parsed = item.parse_result || {}; const issues = parsed.issues || []; const evidence = parsed.evidence || []; const routing = parsed.metadata?.model_routing; const routingText = routing?.switched ? `视觉解析已完成，后续会话回到 ${routing.return_to_model_id}。` : routing?.vision_model_id ? `视觉解析使用 ${routing.vision_model_id}。` : ""; return `<div class="report-item"><div><strong>${esc(item.source_filename)} · ${esc(statusLabel(item.parse_status))}</strong><span>${esc(item.file_type.toUpperCase())} · 证据 ${esc(evidence.length)} 条</span><span>${esc(routingText || issues[0]?.message || (item.merge_allowed ? "可作为当前运行补充证据候选" : "需要人工复核"))}</span></div><span class="tag ${item.parse_status === "passed" ? "" : item.parse_status === "blocked_conflict" ? "error" : "warning"}">${esc(statusLabel(item.parse_status))}</span></div>`; }).join("") : ""; }
+      function renderReports() { $("reports").innerHTML = state.reports.length ? state.reports.map(item => `<div class="report-item"><div><strong>${esc(item.report_type)} · ${esc(item.version)}</strong><span>报告期 ${esc(item.report_period)} · 批次 ${esc(item.source_batch_id)} · 规则 ${esc(item.rule_version)}</span><span>已按当前运行独立保存，可恢复预览、下载或导出</span><span class="admin-only">${esc(item.relative_path)} · ${esc(item.sha256 || "暂无哈希")}</span></div><div class="report-actions"><button class="button ghost small preview-report" data-report-id="${esc(item.report_artifact_id)}" type="button">预览</button><a class="button ghost small" href="/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports/${encodeURIComponent(item.report_artifact_id)}/download">下载</a><button class="button ghost small export-report" data-report-id="${esc(item.report_artifact_id)}" type="button">导出</button><button class="button ghost small open-report-directory" data-report-id="${esc(item.report_artifact_id)}" type="button">打开目录</button></div></div>`).join("") : '<p class="muted" style="padding:0 0 16px">当前运行还没有报告。生成后会显示在这里。</p>'; document.querySelectorAll(".preview-report").forEach(button => button.addEventListener("click", () => previewReport(button.dataset.reportId))); document.querySelectorAll(".export-report").forEach(button => button.addEventListener("click", () => exportReport(button.dataset.reportId))); document.querySelectorAll(".open-report-directory").forEach(button => button.addEventListener("click", () => openReportDirectory(button.dataset.reportId))); }
+      function renderBatch() { const summary = state.batchSummary; const quality = summary.quality_overview || {}; const derived = quality.enterprise_derived || {}; $("batchSummary").style.display = "block"; $("batchSummary").innerHTML = `<div class="batch-card"><div><strong>${esc(summary.source_filename)} · ${esc(summary.status)}</strong><span>${esc((summary.validation?.company_codes || []).length)} 家企业 · 企业级派生问题 ${esc(derived.issue_count || 0)} 条</span></div><span class="batch-hash admin-only">${esc(summary.sha256)}</span></div>`; }
+      function renderSourceBatch() { if (!state.sourceBatch) return; $("batchSummary").style.display = "block"; $("batchSummary").innerHTML = `<div class="batch-card"><div><strong>${esc(state.sourceBatch.source_filename)} · ${esc(statusLabel(state.sourceBatch.validation_status))}</strong><span>${esc((state.sourceBatch.available_company_codes || []).length)} 家企业 · 批次可复用</span></div><span class="batch-hash admin-only">${esc(state.sourceBatch.sha256)}</span></div>`; $("batchStatus").textContent = `当前运行已恢复数据批次，可复用创建其他企业运行。`; }
+
+      function showRunDialog() { if (!state.sourceBatch) return toast("请先上传并登记一个可用工作簿"); $("enterpriseSelect").innerHTML = (state.sourceBatch.available_company_codes || []).map(code => `<option value="${esc(code)}">${esc(code)}</option>`).join(""); $("runName").value = "企业评估"; $("runDialog").showModal(); }
+      async function createRun() { const code = $("enterpriseSelect").value; if (!code || !state.workspaceId || !state.sourceBatch) return; try { const run = await api(`/api/v1/workspaces/${encodeURIComponent(state.workspaceId)}/runs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enterprise_code: code, source_batch_id: state.sourceBatch.source_batch_id, run_name: $("runName").value.trim() || `${code}评估`, rule_version: "m1-local-v0.1", model_config: { mode: "offline", provider: "none" }, basic_info_index: { "企业代号": code, "索引来源": "基本信息" } }) }); $("runDialog").close(); await refreshRuns(); await switchRun(run.assessment_run_id); toast(`已切换到 ${code} 的新评估运行`); } catch (error) { toast(`创建运行失败：${error.message}`); } }
+      async function refreshRuns() { const body = await api(`/api/v1/workspaces/${encodeURIComponent(state.workspaceId)}/runs`); state.runs = body.runs || []; renderRuns(); }
+      async function uploadWorkbook() { const file = $("file").files[0]; if (!file) return toast("请选择.xlsx工作簿"); if (!state.workspaceId) return toast("请先创建工作空间"); $("batchStatus").textContent = "正在上传、校验五张表并登记批次……"; try { const summary = await api("/api/v1/documents", { method: "POST", body: (() => { const form = new FormData(); form.append("file", file); return form; })() }); state.batchSummary = summary; if (summary.status === "failed") throw new Error("工作簿校验失败，请先修复批次问题"); state.sourceBatch = await api("/api/v1/source-batches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ batch_id: summary.batch_id }) }); renderBatch(); $("batchStatus").textContent = `批次已登记，可复用创建其他企业运行。`; showRunDialog(); } catch (error) { $("batchStatus").textContent = `批次处理失败：${error.message}`; toast(error.message); } }
+      async function uploadRunAttachment() { const file = $("attachmentFile").files[0]; if (!file) return toast("请选择PDF、DOCX、图片或当前批次XLSX"); if (!state.currentRunId) return toast("请先创建并切换到一个评估运行"); $("attachmentStatus").textContent = "正在保存原件并按模型视觉能力路由解析……"; try { const form = new FormData(); form.append("file", file); const selectedModel = $("userModelSelect").value || $("modelSelect").value || ""; if (selectedModel) form.append("session_model_id", selectedModel); const result = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/attachments`, { method: "POST", body: form }); state.attachments = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/attachments`)).attachments || []; renderAttachments(); const parse = result.parse || {}; const routing = result.model_routing; const routingText = routing?.switched ? `视觉解析使用 ${routing.vision_model_id}，完成后回到 ${routing.return_to_model_id}。` : routing?.vision_model_id ? `视觉解析使用 ${routing.vision_model_id}。` : ""; $("attachmentStatus").textContent = `${file.name}：${statusLabel(parse.status)}。${routingText}${parse.merge_allowed ? "可作为当前运行补充证据候选。" : "未合并为当前运行事实，需要人工复核。"}`; $("attachmentFile").value = ""; toast($("attachmentStatus").textContent); } catch (error) { $("attachmentStatus").textContent = `附件处理失败：${error.message}`; toast(error.message); } }
+
+      async function loadModelCapabilities() { const populate = (selector, options) => { $(selector).innerHTML = options.length ? options.map(item => `<option value="${esc(item.model_id)}">${esc(item.display_name)}</option>`).join("") : '<option value="">离线基础流程（未配置外部模型）</option>'; }; try { const body = await api("/api/v1/model-providers"); state.models = body.models || []; populate("modelSelect", state.models); populate("userModelSelect", state.models); if (body.default_model_id && state.models.some(item => item.model_id === body.default_model_id)) { $("modelSelect").value = body.default_model_id; $("userModelSelect").value = body.default_model_id; } $("modelSelect").style.display = state.models.length ? "block" : "none"; $("modelUnavailable").style.display = state.models.length ? "none" : "inline"; $("userModelSelect").hidden = false; $("userModelUnavailable").hidden = true; $("modelStatus").textContent = state.models.length ? "外部模型已配置。规则、权重、阈值和评分不进入模型。" : "未配置外部模型；消息将使用离线受控流程。"; } catch (error) { state.models = []; populate("modelSelect", []); populate("userModelSelect", []); $("modelSelect").style.display = "none"; $("modelUnavailable").style.display = "inline"; $("userModelSelect").hidden = false; $("userModelUnavailable").hidden = true; $("modelStatus").textContent = "模型能力读取失败，已保留离线流程。"; } }
+      async function sendMessage() { if (!state.currentRunId) return; const content = $("messageInput").value.trim(); if (!content) return; const modelId = $("userModelSelect").value || $("modelSelect").value || null; const button = $("sendMessage"); button.disabled = true; button.innerHTML = `${icon("refresh")}处理中`; beginProcessSummary(); try { await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/conversation/turn`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content, model_id: modelId, mode: modelId ? "auto" : "offline" }) }); $("messageInput").value = ""; state.messages = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/messages`)).messages || []; renderMessages(); state.processing = false; await loadProcessSummary({ collapse: true }); if (state.adminUnlocked) loadAdminEvents(); } catch (error) { state.processing = false; showProcessFailure("处理未完成，请查看提示并重试"); toast(`会话处理失败：${error.message}`); } finally { button.disabled = false; button.innerHTML = `${icon("send")}发送`; } }
+      async function stopConversation() { if (!state.currentRunId) return; try { await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/conversation/stop`, { method: "POST" }); toast("已请求停止当前会话"); if (state.adminUnlocked) loadAdminEvents(); } catch (error) { toast(`停止失败：${error.message}`); } }
+      async function retryConversation() { if (!state.currentRunId) return; try { await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/conversation/retry`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model_id: $("modelSelect").value || null }) }); state.messages = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/messages`)).messages || []; renderMessages(); if (state.adminUnlocked) loadAdminEvents(); } catch (error) { toast(`重试失败：${error.message}`); } }
+      async function generateReport() { if (!state.currentRunId) return; $("generateReport").disabled = true; try { const result = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports/basic`, { method: "POST" }); state.reports = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports`)).reports || []; const index = state.runs.findIndex(item => item.assessment_run_id === state.currentRunId); if (index >= 0) state.runs[index] = result.assessment_run; state.currentRun = result.assessment_run; renderRuns(); renderCurrent(); $("reportPreview").textContent = result.markdown; $("reportPreview").style.display = "block"; toast("基础报告已保存到当前运行"); } catch (error) { toast(`报告生成失败：${error.message}`); } finally { $("generateReport").disabled = false; } }
+      async function previewReport(reportId) { try { const result = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports/${encodeURIComponent(reportId)}`); $("reportPreview").textContent = result.markdown; $("reportPreview").style.display = "block"; } catch (error) { toast(`报告读取失败：${error.message}`); } }
+      async function exportReport(reportId) { const targetDirectory = window.prompt("请输入导出目录的本机路径（桌面版将提供目录选择器）", ""); if (!targetDirectory) return; try { const result = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports/${encodeURIComponent(reportId)}/export`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target_directory: targetDirectory }) }); state.reports = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports`)).reports || []; renderReports(); toast(`报告已导出：${result.exported_file}`); } catch (error) { toast(`报告导出失败：${error.message}`); } }
+      async function openReportDirectory(reportId) { try { const result = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports/${encodeURIComponent(reportId)}/open-directory`, { method: "POST" }); toast(result.opened ? "已打开报告目录" : "当前环境无法自动打开目录，请使用下载或导出"); } catch (error) { toast(`目录打开失败：${error.message}`); } }
+      function showCompareDialog() { const eligible = state.runs.filter(run => ["completed", "archived"].includes(run.status)); $("compareChoices").innerHTML = eligible.length >= 2 ? eligible.map(run => `<label class="check-row"><input type="checkbox" value="${esc(run.assessment_run_id)}" /> <span><b>${esc(run.enterprise_code)}</b><br /><span class="muted">${esc(statusLabel(run.status))} · ${esc(run.source_batch_id)} · 规则 ${esc(run.rule_version)}</span></span></label>`).join("") : '<p class="muted">至少需要两个已完成或已归档运行。请先生成报告并标记运行已完成。</p>'; $("compareResult").innerHTML = ""; $("compareDialog").showModal(); }
+      function renderComparisonFacts(comparison) { const details = comparison.output_snapshot?.run_details || []; if (!details.length) return '<p class="muted">当前对比视图没有可恢复的事实明细。</p>'; const cell = (detail, dimension) => { const basic = detail.enterprise_basic_info || {}; if (dimension === "企业基本信息") return `行业：${esc(basic["行业"])}<br>细分：${esc(basic["细分行业/领域"])}<br>地区：${esc(basic["所属地区"])}<br>规模：${esc(basic["企业规模"])}`; if (dimension === "数据质量") { const quality = detail.data_quality || {}; const counts = quality.severity_counts || {}; return `问题 ${esc(quality.issue_count || 0)} 条<br>错误 ${esc(counts.error || 0)} · 警告 ${esc(counts.warning || 0)} · 提示 ${esc(counts.info || 0)}`; } if (dimension === "能耗变化") { const trend = detail.energy_trend || {}; return [...(trend.resources || []), ...(trend.operating_metrics || [])].map(item => `${esc(item.name)}：${esc(item["2024"])} → ${esc(item["2025"])}（${esc(item.status)}）`).join("<br>") || "未记录"; } if (dimension === "转型目录候选") { const catalog = detail.catalog_matches || {}; return `${esc(catalog.status)}<br>${(catalog.candidates || []).slice(0, 5).map(item => esc(item.transition_path)).join("<br>") || "无候选"}`; } const reference = detail.reference_comparison || {}; return `状态：${esc(reference.status)}<br>参考字段：${esc(reference.reference_fields_present || 0)}<br>泄漏隔离：${esc(reference.leakage_guard?.status || "—")}`; }; const dimensions = ["企业基本信息", "数据质量", "能耗变化", "转型目录候选", "参考结论对照"]; return `<h3 class="compare-facts-title">五维事实对照</h3><div class="table-wrap"><table class="compare-facts"><thead><tr><th>维度</th>${details.map(detail => `<th>${esc(detail.enterprise_code)}</th>`).join("")}</tr></thead><tbody>${dimensions.map(dimension => `<tr><th>${esc(dimension)}</th>${details.map(detail => `<td>${cell(detail, dimension)}</td>`).join("")}</tr>`).join("")}</tbody></table></div><p class="muted">事实快照按已完成运行读取；参考结论仅作独立对照，不进入模型输入或事实特征。</p>`; }
+      function renderComparison() { const comparison = state.comparison; if (!comparison) { $("compareCard").style.display = "none"; $("compareSummary").innerHTML = ""; return; } $("compareSummary").innerHTML = `<div class="batch-card"><div><strong>对比视图已保存</strong><span>${esc(comparison.output_snapshot.notice)}</span><span>生成时间：${esc(comparison.created_at)}</span></div></div><div class="table-wrap"><table style="margin-top:10px"><thead><tr><th>企业</th><th>报告期</th><th>批次</th><th>规则</th><th>质量门</th></tr></thead><tbody>${(comparison.output_snapshot.run_summaries || []).map(item => `<tr><td>${esc(item.enterprise_code)}</td><td>${esc(item.report_period)}</td><td>${esc(item.source_batch_id)}</td><td>${esc(item.rule_version)}</td><td>${esc(item.quality_gate_status)}</td></tr>`).join("")}</tbody></table></div>${comparison.incomparability_reasons.length ? `<p class="muted">不可直接比较：${esc(comparison.incomparability_reasons.join("；"))}</p>` : '<p class="muted">当前选定运行未发现版本、批次或报告期差异；仍不生成排名结论。</p>'}${renderComparisonFacts(comparison)}`; $("compareCard").style.display = "block"; }
+      async function createComparison() { const ids = [...document.querySelectorAll("#compareChoices input:checked")].map(input => input.value); if (ids.length < 2) return toast("请选择至少两个运行"); try { const comparison = await api("/api/v1/comparison-views", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ workspace_id: state.workspaceId, assessment_run_ids: ids }) }); state.comparison = comparison; renderComparison(); $("compareDialog").close(); toast("基础对比视图已生成并保存"); } catch (error) { toast(`对比失败：${error.message}`); } }
+      async function completeRun() { if (!state.currentRunId) return; try { const run = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "completed", quality_gate_status: "passed_with_warnings" }) }); const index = state.runs.findIndex(item => item.assessment_run_id === state.currentRunId); if (index >= 0) state.runs[index] = run; state.currentRun = run; renderRuns(); renderCurrent(); toast("当前运行已标记为已完成，可进入基础对比"); } catch (error) { toast(`运行状态更新失败：${error.message}`); } }
+
+      function updateAdminSummary() { $("adminRunSummary").textContent = state.currentRun ? `${state.currentRun.enterprise_code} · ${statusLabel(state.currentRun.status)} · ${state.currentRun.source_batch_id}` : "尚未选择评估运行。"; }
+      async function loadAdminEvents() { if (!state.currentRunId || !state.adminUnlocked || !state.adminToken) return; try { const body = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/conversation/events`, { headers: { Authorization: `Bearer ${state.adminToken}` } }); $("adminEvents").textContent = body.events?.length ? body.events.map(item => `${item.created_at || "—"}  ${item.event_type || "event"}  ${item.status || "—"}  ${item.model_id || ""}`).join("\n") : "当前运行还没有审计事件。"; } catch (error) { $("adminEvents").textContent = `审计事件读取失败：${error.message}`; } }
+      function openAdmin() { $("adminDialog").showModal(); if (state.adminUnlocked) { $("adminLogin").hidden = true; $("adminPanel").hidden = false; updateAdminSummary(); loadAdminEvents(); } }
+      async function loginAdmin() { const password = $("adminPassword").value; if (!password) { $("adminLoginStatus").textContent = "请输入管理员口令。"; return; } $("adminLoginButton").disabled = true; $("adminLoginStatus").textContent = "正在验证……"; try { const session = await api("/api/v1/admin/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }); state.adminToken = session.access_token; state.adminUnlocked = true; document.body.classList.add("admin-unlocked"); $("adminLogin").hidden = true; $("adminPanel").hidden = false; $("adminPassword").value = ""; updateAdminSummary(); await loadAdminEvents(); toast("管理员诊断视图已开启"); } catch (error) { $("adminLoginStatus").textContent = error.message; } finally { $("adminLoginButton").disabled = false; } }
+      function logoutAdmin() { state.adminUnlocked = false; state.adminToken = null; document.body.classList.remove("admin-unlocked"); $("adminPanel").hidden = true; $("adminLogin").hidden = false; $("adminLoginStatus").textContent = ""; $("adminDialog").close(); toast("已退出管理员视图"); }
+
+      $("createWorkspace").addEventListener("click", createWorkspace); $("startWorkspace").addEventListener("click", () => { $("workspaceName").focus(); $("workspaceName").scrollIntoView({ behavior: "smooth", block: "center" }); }); $("workspaceName").addEventListener("keydown", event => { if (event.key === "Enter") createWorkspace(); }); $("workspaceSelect").addEventListener("change", event => selectWorkspace(event.target.value)); $("newRun").addEventListener("click", showRunDialog); $("cancelRun").addEventListener("click", () => $("runDialog").close()); $("confirmRun").addEventListener("click", createRun); $("file").addEventListener("change", uploadWorkbook); $("attachmentFile").addEventListener("change", uploadRunAttachment); $("sendMessage").addEventListener("click", sendMessage); $("messageInput").addEventListener("keydown", event => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") sendMessage(); }); $("stopConversation").addEventListener("click", stopConversation); $("retryConversation").addEventListener("click", retryConversation); $("generateReport").addEventListener("click", generateReport); $("completeRun").addEventListener("click", completeRun); $("compareButton").addEventListener("click", showCompareDialog); $("reportLibraryButton").addEventListener("click", () => $("reportCard").scrollIntoView({ behavior: "smooth", block: "start" })); $("cancelCompare").addEventListener("click", () => $("compareDialog").close()); $("confirmCompare").addEventListener("click", createComparison); $("adminEntry").addEventListener("click", openAdmin); $("closeAdminLogin").addEventListener("click", () => $("adminDialog").close()); $("adminLoginButton").addEventListener("click", loginAdmin); $("adminLogout").addEventListener("click", logoutAdmin); $("closeAdminPanel").addEventListener("click", () => $("adminDialog").close()); $("adminPassword").addEventListener("keydown", event => { if (event.key === "Enter") loginAdmin(); });
+      boot();
+    </script>
+  </body>
+</html>
