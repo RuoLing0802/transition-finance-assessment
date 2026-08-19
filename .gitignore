@@ -16,6 +16,11 @@ code/python/build/
 code/python/dist/
 code/python/*.spec.bak
 
+# M3 React frontend dependencies and local build output
+code/frontend/node_modules/
+code/frontend/.vite/
+code/python/app/static/frontend-dist/
+
 # OS and editor files
 .DS_Store
 .idea/

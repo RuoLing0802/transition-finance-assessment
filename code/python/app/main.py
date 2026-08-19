@@ -14,6 +14,7 @@ from typing import Any
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .config import FIELD_CONTRACT_VERSION, MAX_UPLOAD_BYTES, PROJECT_ROOT, RULE_VERSION, SIMULATED_DATA_NOTICE
@@ -61,7 +62,11 @@ store = BatchStore()
 domain_store: DomainStore | None = None
 orchestration_service: OrchestrationService | None = None
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+FRONTEND_DIST = STATIC_DIR / "frontend-dist"
 _admin_sessions: dict[str, float] = {}
+
+if (FRONTEND_DIST / "assets").is_dir():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="frontend-assets")
 
 
 def _metadata(batch_id: str) -> dict[str, Any]:
@@ -254,7 +259,16 @@ def _open_local_directory(directory: Path) -> bool:
 
 @app.get("/", response_class=FileResponse)
 def index() -> FileResponse:
-    return FileResponse(STATIC_DIR / "index.html")
+    frontend_index = FRONTEND_DIST / "index.html"
+    return FileResponse(frontend_index if frontend_index.is_file() else STATIC_DIR / "index.html")
+
+
+@app.get("/favicon.svg", response_class=FileResponse)
+def favicon() -> FileResponse:
+    frontend_favicon = FRONTEND_DIST / "favicon.svg"
+    if frontend_favicon.is_file():
+        return FileResponse(frontend_favicon, media_type="image/svg+xml")
+    raise HTTPException(status_code=404, detail="favicon不可用")
 
 
 @app.get("/health")
