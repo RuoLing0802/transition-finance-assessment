@@ -54,10 +54,13 @@ import type {
   ProcessSummary,
   SourceBatch,
   Workspace,
+  WorkflowCheckpoint,
+  WorkflowDefinition,
 } from './api/contracts';
 import { AssessmentPipeline, type PipelineStage } from './components/inspector/AssessmentPipeline';
 import { StatusBadge, type AppStatus } from './components/common/StatusBadge';
 import { ToolActivityCard } from './components/conversation/ToolActivityCard';
+import { WorkflowControlCard } from './components/workflow/WorkflowControlCard';
 import './styles.css';
 
 const DEFAULT_WORKSPACE_NAME = '转型金融评估工作台';
@@ -112,6 +115,8 @@ function App() {
   const [detail, setDetail] = useState<CompanyDetail | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [processSummary, setProcessSummary] = useState<ProcessSummary | null>(null);
+  const [workflowDefinitions, setWorkflowDefinitions] = useState<WorkflowDefinition[]>([]);
+  const [workflows, setWorkflows] = useState<WorkflowCheckpoint[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [models, setModels] = useState<ModelOption[]>([]);
   const [selectedModel, setSelectedModel] = useState<string | undefined>();
@@ -129,6 +134,7 @@ function App() {
   const [newRunName, setNewRunName] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [capabilities, setCapabilities] = useState<Record<string, unknown> | null>(null);
+  const [workflowBusy, setWorkflowBusy] = useState<string | null>(null);
 
   const availableCodes = sourceBatch?.available_company_codes ?? ['TF0001', 'TF0002'];
   const analysis = detail?.analysis;
@@ -220,20 +226,25 @@ function App() {
     setRunLoading(true);
     setError('');
     try {
-      const [nextDetail, messagePayload, summary, attachmentPayload] = await Promise.all([
+      const [nextDetail, messagePayload, summary, attachmentPayload, workflowPayload] = await Promise.all([
         api.getCompanyDetail(nextRun.assessment_run_id),
         api.listMessages(nextRun.assessment_run_id),
         api.getProcessSummary(nextRun.assessment_run_id),
         api.listAttachments(nextRun.assessment_run_id),
+        api.listWorkflows(nextRun.assessment_run_id),
       ]);
       setDetail(nextDetail);
       setMessages(messagePayload.messages);
       setProcessSummary(summary);
       setAttachments(attachmentPayload.attachments);
+      setWorkflowDefinitions(workflowPayload.definitions);
+      setWorkflows(workflowPayload.workflows);
       const configuredModel = String(nextRun.model_config?.model_id ?? '');
       if (configuredModel && models.some((item) => item.model_id === configuredModel)) setSelectedModel(configuredModel);
     } catch (cause) {
       setDetail(null);
+      setWorkflowDefinitions([]);
+      setWorkflows([]);
       setError(cause instanceof Error ? cause.message : '当前评估运行加载失败');
     } finally {
       setRunLoading(false);
@@ -349,6 +360,77 @@ function App() {
     }
   }
 
+  async function startWorkflow(workflowName: WorkflowCheckpoint['workflow_name']) {
+    if (!run) return;
+    const actionKey = `start:${workflowName}`;
+    setWorkflowBusy(actionKey);
+    try {
+      await api.startWorkflow(run.assessment_run_id, workflowName);
+      await loadRunData(run);
+      message.success('M4流程已启动，检查点已保存');
+    } catch (cause) {
+      message.error(cause instanceof Error ? cause.message : '流程启动失败');
+    } finally {
+      setWorkflowBusy(null);
+    }
+  }
+
+  async function pauseWorkflow(workflow: WorkflowCheckpoint) {
+    if (!run) return;
+    const actionKey = `${workflow.workflow_name}:${workflow.status}`;
+    setWorkflowBusy(actionKey);
+    try {
+      await api.pauseWorkflow(run.assessment_run_id, workflow.workflow_name);
+      await loadRunData(run);
+      message.success('流程已暂停，当前检查点已保存');
+    } catch (cause) {
+      message.error(cause instanceof Error ? cause.message : '流程暂停失败');
+    } finally {
+      setWorkflowBusy(null);
+    }
+  }
+
+  async function resumeWorkflow(workflow: WorkflowCheckpoint, confirmNoAdditional = false) {
+    if (!run) return;
+    const answer = composer.trim();
+    if (workflow.status === 'waiting_for_input' && !answer && !confirmNoAdditional) {
+      message.warning('请先在输入框填写补充回答，或明确确认暂不补充。');
+      return;
+    }
+    if (confirmNoAdditional && answer) {
+      message.warning('请清空输入框后再确认暂不补充，不能同时提交两种回应。');
+      return;
+    }
+    if (answer) setComposer('');
+    const actionKey = `${workflow.workflow_name}:${workflow.status}`;
+    setWorkflowBusy(actionKey);
+    try {
+      await api.resumeWorkflow(run.assessment_run_id, workflow.workflow_name, answer ? [answer] : [], confirmNoAdditional);
+      await loadRunData(run);
+      message.success('流程已恢复');
+    } catch (cause) {
+      if (answer) setComposer(answer);
+      message.error(cause instanceof Error ? cause.message : '流程恢复失败');
+    } finally {
+      setWorkflowBusy(null);
+    }
+  }
+
+  async function reviewWorkflow(workflow: WorkflowCheckpoint, decision: 'approve' | 'request_changes') {
+    if (!run) return;
+    const actionKey = `${workflow.workflow_name}:${decision}`;
+    setWorkflowBusy(actionKey);
+    try {
+      await api.reviewWorkflow(run.assessment_run_id, workflow.workflow_name, decision);
+      await loadRunData(run);
+      message.success(decision === 'approve' ? '人工确认已记录' : '已退回补充流程');
+    } catch (cause) {
+      message.error(cause instanceof Error ? cause.message : '人工确认失败');
+    } finally {
+      setWorkflowBusy(null);
+    }
+  }
+
   const visibleMessages = messages.filter((item) => item.role !== 'tool' && !['tool_call', 'tool_result'].includes(item.message_type));
   const latestStatus = visibleMessages.filter((item) => item.role !== 'user').at(-1);
   const hasRun = Boolean(run);
@@ -422,6 +504,7 @@ function App() {
               <section className="conversation-shell">
                 <div className="run-status-strip"><div className="current-enterprise"><Avatar size={34} className="enterprise-avatar">{run?.enterprise_code.slice(-2)}</Avatar><div><span>当前评估企业</span><strong>{run?.enterprise_code} <small>{valueOf(basic, '企业名称') !== '—' ? valueOf(basic, '企业名称') : '配套数据企业'}</small></strong></div></div><div className="run-state"><StatusBadge status={statusForQuality(detail)} /><span>{detail ? '结构化事实已载入' : '正在载入企业事实'}</span></div></div>
                 <ToolActivityCard summary={processSummary} processing={processing} />
+                <WorkflowControlCard definitions={workflowDefinitions} workflows={workflows} busy={workflowBusy} onStart={(workflowName) => void startWorkflow(workflowName)} onPause={(workflow) => void pauseWorkflow(workflow)} onResume={(workflow, confirmNoAdditional) => void resumeWorkflow(workflow, confirmNoAdditional)} onReview={(workflow, decision) => void reviewWorkflow(workflow, decision)} />
                 <div className="conversation-scroll">
                   {!visibleMessages.length && <div className="agent-intro"><div className="agent-avatar"><ThunderboltOutlined /></div><div><strong>我已准备好检查 {run?.enterprise_code}</strong><p>我会先读取当前运行的企业画像、数据质量和能耗变化，再告诉你哪些环节已有依据、哪些环节还缺资料。</p><div className="suggestion-row"><button onClick={() => setComposer('请先概览当前企业的数据质量和能耗变化')}>概览数据质量</button><button onClick={() => setComposer('请查看转型目录候选')}>查看目录候选</button><button onClick={() => setComposer('哪些材料还需要补充？')}>查看待补材料</button></div></div></div>}
                   {visibleMessages.map((item) => <div className={`chat-message ${item.role}`} key={item.message_id}><div className="message-meta">{item.role === 'user' ? <><UserOutlined /> 你</> : <><span className="mini-agent"><ThunderboltOutlined /></span> 评估 Agent</>} {item.payload?.mode === 'offline' && <Tag bordered={false}>离线流程</Tag>}</div><MessageContent content={item.content} /></div>)}

@@ -29,6 +29,9 @@ from .domain_schemas import (
     ReportExportRequest,
     SourceBatchRegister,
     WorkspaceCreate,
+    WorkflowResumeRequest,
+    WorkflowReviewRequest,
+    WorkflowStartRequest,
 )
 from .domain_store import (
     DomainConflictError,
@@ -42,6 +45,7 @@ from .orchestration import OrchestrationService
 from .parsers import classify_file, parse_file, sha256_bytes
 from .reporting import build_basic_report
 from .store import BatchStore, validate_artifact_name
+from .workflows import AssessmentWorkflowRuntime, workflow_analysis_view
 
 
 class ReportRequest(BaseModel):
@@ -61,6 +65,7 @@ app = FastAPI(
 store = BatchStore()
 domain_store: DomainStore | None = None
 orchestration_service: OrchestrationService | None = None
+workflow_runtime: AssessmentWorkflowRuntime | None = None
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 FRONTEND_DIST = STATIC_DIR / "frontend-dist"
 _admin_sessions: dict[str, float] = {}
@@ -176,6 +181,14 @@ def _get_orchestration_service() -> OrchestrationService:
             ),
         )
     return orchestration_service
+
+
+def _get_workflow_runtime() -> AssessmentWorkflowRuntime:
+    global workflow_runtime
+    current_store = _get_domain_store()
+    if workflow_runtime is None or workflow_runtime.domain_store is not current_store:
+        workflow_runtime = AssessmentWorkflowRuntime(current_store, _run_workflow_analysis)
+    return workflow_runtime
 
 
 def _domain_error(exc: Exception) -> HTTPException:
@@ -382,6 +395,11 @@ def _run_analysis(assessment_run_id: str) -> tuple[dict[str, Any], dict[str, Any
     except (FileNotFoundError, ValueError, OSError) as exc:
         raise DomainConflictError(f"运行数据批次原件不可用：{type(exc).__name__}") from exc
     return run, analysis
+
+
+def _run_workflow_analysis(assessment_run_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    run, analysis = _run_analysis(assessment_run_id)
+    return run, workflow_analysis_view(analysis)
 
 
 @app.get("/api/v1/assessment-runs/{assessment_run_id}/company-detail")
@@ -601,6 +619,59 @@ def retry_orchestration(assessment_run_id: str, request: ConversationTurnCreate 
 def list_process_summary(assessment_run_id: str) -> dict[str, Any]:
     try:
         return _get_orchestration_service().list_process_summary(assessment_run_id)
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
+        raise _domain_error(exc) from exc
+
+
+@app.get("/api/v1/assessment-runs/{assessment_run_id}/workflows")
+def list_assessment_workflows(assessment_run_id: str) -> dict[str, Any]:
+    try:
+        return _get_workflow_runtime().list(assessment_run_id)
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
+        raise _domain_error(exc) from exc
+
+
+@app.post("/api/v1/assessment-runs/{assessment_run_id}/workflows/start")
+def start_assessment_workflow(assessment_run_id: str, request: WorkflowStartRequest) -> dict[str, Any]:
+    try:
+        return _get_workflow_runtime().start(assessment_run_id, request.workflow_name)
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
+        raise _domain_error(exc) from exc
+
+
+@app.post("/api/v1/assessment-runs/{assessment_run_id}/workflows/{workflow_name}/pause")
+def pause_assessment_workflow(assessment_run_id: str, workflow_name: str) -> dict[str, Any]:
+    try:
+        return _get_workflow_runtime().pause(assessment_run_id, workflow_name)
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
+        raise _domain_error(exc) from exc
+
+
+@app.post("/api/v1/assessment-runs/{assessment_run_id}/workflows/{workflow_name}/resume")
+def resume_assessment_workflow(
+    assessment_run_id: str,
+    workflow_name: str,
+    request: WorkflowResumeRequest,
+) -> dict[str, Any]:
+    try:
+        return _get_workflow_runtime().resume(
+            assessment_run_id,
+            workflow_name,
+            request.answers,
+            confirm_no_additional=request.confirm_no_additional,
+        )
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
+        raise _domain_error(exc) from exc
+
+
+@app.post("/api/v1/assessment-runs/{assessment_run_id}/workflows/{workflow_name}/review")
+def review_assessment_workflow(
+    assessment_run_id: str,
+    workflow_name: str,
+    request: WorkflowReviewRequest,
+) -> dict[str, Any]:
+    try:
+        return _get_workflow_runtime().review(assessment_run_id, workflow_name, request.decision)
     except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
         raise _domain_error(exc) from exc
 

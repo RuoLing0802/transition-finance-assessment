@@ -10,16 +10,17 @@
 
 ## 当前状态
 
-- 阶段：M2核心基线已完成01审查与正式集成，下一步由02实施M3专业Agent工作台前端重构。
-- 正式总体计划：[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) v1.8，是本项目唯一正式总体计划。
+- 阶段：M3专业Agent工作台与M4可恢复工作流已完成01审查和正式集成；M5知识检索待单独策划，尚未启动。
+- 正式总体计划：[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) v1.9，是本项目唯一正式总体计划。
 - 总体方案：已确认保留“8行业框架＋2行业深验”；铜产业为第一深验行业，第二深验行业待配套模拟数据审计、正式标准和评审需要进一步确认。
 - 配套数据：命题方配套模拟数据已经取得，文件保存在本地未跟踪目录；该数据脱敏、模拟生成，仅用于比赛开发测试，不是真实企业业务数据。
 - 数据缺口：当前仍未取得独立数据字典、训练/测试划分和正式评分标签；不得据此宣称模型效果、评分结果或真实企业结论。
 - 工作簿分工：`基本信息`、`能耗信息`、`补充信息`为主要输入；`转型目录`为规则与知识来源；`转型规划结论`为参考结论和验证对照，不得作为同一模型输入特征。
 - 03初步审计：已归档企业表主键闭合、缺失/重复、单位观察、语义一致性、目录覆盖缺口和泄漏风险；详见 [`docs/DATA_PROFILE.md`](docs/DATA_PROFILE.md)。候选数据契约详见 [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md)，其中宽转长、缺失等级、目录ID和质量阻断规则仍待若翎确认。
-- M2审查：M1整改及M2核心工程基线已通过01审查；全量Python回归在允许本机端口的环境中为`54 passed`。审查记录见[`docs/DEVELOPMENT_REVIEW.md`](docs/DEVELOPMENT_REVIEW.md) v0.2。
-- 02开发指导：[`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md) v0.6与[`docs/M3_DEVELOPMENT_PROMPT.md`](docs/M3_DEVELOPMENT_PROMPT.md) v1.0共同构成下一阶段执行依据。M3只进行Codex式三栏UI、React前端迁移、配套数据主流程和真实阶段状态展示；不接入LangGraph/LangChain、知识库、正式碳核算、评分、Windows或报告扩展。
-- 后续顺序：M4再评估LangGraph状态运行时与LangChain组件层，M5再建设知识检索，随后依次推进碳核算、行业对标/转型行为、评分与信贷支持。该顺序不删减“8行业框架＋2行业深验”最终MVP范围。
+- 工程审查：M1/M2基线、M3 React工作台和M4可恢复工作流均已通过01审查。M4分拆验证覆盖全部`60`项Python测试，前端为`3 test files / 5 tests passed`；详见[`docs/DEVELOPMENT_REVIEW.md`](docs/DEVELOPMENT_REVIEW.md) v0.3与[`docs/M4_DEVELOPMENT_REVIEW.md`](docs/M4_DEVELOPMENT_REVIEW.md) v1.0。
+- 已接入技术：React、TypeScript、Vite、Ant Design、ECharts、FastAPI、Pydantic、原生`sqlite3`、LangGraph、LangChain Core、运行级SQLite检查点和离线回退。LangGraph只负责状态编排，LangChain Core只包装确定性节点，不接管企业事实、规则、评分或证据。
+- 02开发指导：[`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md) v0.7记录当前正式基线和阶段边界；[`docs/M3_DEVELOPMENT_PROMPT.md`](docs/M3_DEVELOPMENT_PROMPT.md) v1.0保留为M3历史执行依据。M5必须另行策划和授权。
+- 后续顺序：M5知识检索 → M6碳核算 → M7行业对标与转型行为 → M8评分与信贷支持 → 报告扩展、Windows与正式分发。该顺序不删减“8行业框架＋2行业深验”最终MVP范围。
 - 公开边界：原始配套数据、ZIP和解压目录由`.gitignore`排除，不上传公开GitHub。
 - 开发授权：只有收到完全一致的口令“开始开发MVP”后，才进入程序开发阶段。
 
@@ -60,9 +61,10 @@
 - [`docs/DATA_PROFILE.md`](docs/DATA_PROFILE.md)：03配套数据初步画像、事实性审计结果和缺口。
 - [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md)：初步审计后的候选数据契约，待确认，不是程序实现规范。
 - [`docs/DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md`](docs/DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md)：审计复核、问题完善顺序和流程软件准备清单。
-- [`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md)：02软件开发的当前执行版、M1/M2历史验收、领域模型、接口、赛题映射和M3阶段边界。
-- [`docs/DEVELOPMENT_REVIEW.md`](docs/DEVELOPMENT_REVIEW.md)：M1/M2成果审查、产品模块、实际技术接入状态和未实现边界。
-- [`docs/M3_DEVELOPMENT_PROMPT.md`](docs/M3_DEVELOPMENT_PROMPT.md)：02下一阶段的M3专业Agent工作台正式开发提示词。
+- [`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md)：02软件开发的当前执行版、M1—M4历史验收、领域模型、接口、赛题映射和M5阶段门槛。
+- [`docs/M4_DEVELOPMENT_REVIEW.md`](docs/M4_DEVELOPMENT_REVIEW.md)：M4工作流编排、隔离边界、整改、测试和正式采纳记录。
+- [`docs/DEVELOPMENT_REVIEW.md`](docs/DEVELOPMENT_REVIEW.md)：M1—M4成果审查、产品模块、实际技术接入状态和未实现边界。
+- [`docs/M3_DEVELOPMENT_PROMPT.md`](docs/M3_DEVELOPMENT_PROMPT.md)：02实施M3专业Agent工作台时使用的历史开发提示词。
 - [`docs/TEAM_ROLES.md`](docs/TEAM_ROLES.md)：固定Codex对话、5人动态分工和成果审查机制。
 - [`docs/TASK_BOARD.md`](docs/TASK_BOARD.md)：可选的简要待办清单，不是任务启动前置条件。
 - [`docs/SYNC_WORKFLOW.md`](docs/SYNC_WORKFLOW.md)：单向GitHub、成员直接交付和项目总控接收流程。

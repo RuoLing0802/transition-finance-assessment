@@ -1,10 +1,10 @@
 # 02_软件开发正式开发指导
 
-**版本**：v0.6
+**版本**：v0.7
 **日期**：2026-08-19
 **适用对话**：`02_软件开发`
 **项目总控**：`01_项目总控与决策`
-**当前状态**：M1整改与M2核心基线已由01完成正式审查和集成；全量Python回归在允许本机端口的环境中为`54 passed`。本文件保留M2契约与完整MVP边界，下一实施阶段为M3专业Agent工作台，具体执行同时遵循[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0。
+**当前状态**：M1—M4已由01完成正式审查和集成。M3完成React专业Agent工作台，M4完成LangGraph/LangChain Core可恢复工作流；分拆验证覆盖全部`60`项Python测试，前端为`3 test files / 5 tests passed`。本文件保留既有契约与完整MVP边界；下一阶段M5知识检索尚未启动，必须另行形成开发说明并经若翎确认。
 
 ## 1. 文件定位与开发门槛
 
@@ -657,7 +657,7 @@ flowchart TD
 
 ## 30. 02交付要求
 
-02开始M3前应读取本文件v0.6、[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0和最新`PROJECT_PLAN.md`、`PROJECT_STATUS.md`、`DATA_STATUS.md`、`DATA_PROFILE.md`、`DATA_CONTRACT.md`、`DECISIONS.md`。阶段交付至少包括：
+02开始任何后续阶段前应读取本文件v0.7和最新`PROJECT_PLAN.md`、`PROJECT_STATUS.md`、`DATA_STATUS.md`、`DATA_PROFILE.md`、`DATA_CONTRACT.md`、`DECISIONS.md`以及该阶段专项说明。[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0仅作为M3历史依据。阶段交付至少包括：
 
 - 新增/修改文件清单和架构说明；
 - 每项验收标准的通过、失败或未验证状态；
@@ -669,7 +669,7 @@ flowchart TD
 
 02不提交、不推送、不自行改变正式治理文档。成果交给若翎后，由01审查、决定采纳范围并完成正式Git操作。
 
-## 31. M3当前执行阶段
+## 31. M3/M4正式基线
 
 ### 31.1 已冻结的M2基线
 
@@ -685,9 +685,9 @@ flowchart TD
 
 全量Python回归在允许本机端口的环境中为`54 passed`；5条警告来自第三方PDF依赖的弃用提示。Windows构建工具、MSI验证和报告扩展没有纳入该基线，均不属于M3。
 
-### 31.2 M3正式目标
+### 31.2 M3完成状态
 
-M3仅实施“专业Agent工作台前端重构”，以[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0为详细执行提示词。目标是把当前静态HTML/CSS/JavaScript验收页迁移到React、TypeScript、Vite、Ant Design和ECharts，并形成：
+M3以[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0为历史执行提示词，已把静态HTML/CSS/JavaScript验收页迁移到React、TypeScript、Vite、Ant Design和ECharts，并形成：
 
 1. 左侧工作空间与企业评估运行栏；
 2. 中央简洁Agent对话区、附件入口、模型选择、停止/重试和折叠过程卡片；
@@ -696,11 +696,25 @@ M3仅实施“专业Agent工作台前端重构”，以[`M3_DEVELOPMENT_PROMPT.m
 5. 企业画像、数据质量、能源表现、目录候选和参考对照按需展示；
 6. 对碳核算、行业对标、转型行为、评分和信贷支持显示真实的`not_calculable`、`pending_methodology`或`not_implemented`状态，不使用假进度、假分数或模拟结果。
 
-M3复用现有FastAPI、Pydantic、SQLite、运行隔离和模型适配，不在本阶段迁移SQLAlchemy/PostgreSQL，也不重写已通过的后端业务规则。
+M3复用现有FastAPI、Pydantic、SQLite、运行隔离和模型适配，没有迁移SQLAlchemy/PostgreSQL，也没有重写已通过的后端业务规则。
 
-### 31.3 后续阶段顺序
+### 31.3 M4完成状态
 
-- M4：根据长流程、暂停恢复和人工介入的实际需要，引入LangGraph状态运行时，并按需使用LangChain模型/工具组件；二者不替代FastAPI事实状态、规则引擎或证据库。
+M4已经完成：
+
+- `baseline_review`与`evidence_followup`两类运行级确定性工作流；
+- LangGraph节点图、条件路由和进程内检查点；
+- LangChain Core `RunnableLambda`确定性节点包装；
+- SQLite持久检查点、版本和严格乐观锁；
+- 暂停来源状态、恢复、显式暂不补充、人工通过和退回；
+- 非法状态、空回答、陈旧版本、重复暂停和跨运行隔离；
+- 白名单工作流分析视图，排除`reference_comparison`；
+- 新进程恢复和无LangGraph环境的确定性离线回退。
+
+M4不让LangGraph或LangChain承载事实、规则、评分和证据库；不把`转型规划结论`送入工作流输入、模型输入、检索、特征或标签。M4同步执行到等待点，不宣称已完成长任务实时中断、高并发性能或真实外部模型工作流效果验证。正式审查见[`M4_DEVELOPMENT_REVIEW.md`](M4_DEVELOPMENT_REVIEW.md) v1.0。
+
+### 31.4 后续阶段顺序
+
 - M5：在来源、版本和材料规模明确后建设知识检索层；优先评估轻量本地方案，不直接引入RAGFlow。检索结果只提供候选证据。
 - M6：碳核算基础层与版本化排放因子；缺少边界或因子时输出不可计算。
 - M7：行业对标、转型行为和路径识别，继续保留“8行业框架＋2行业深验”。
@@ -708,3 +722,5 @@ M3复用现有FastAPI、Pydantic、SQLite、运行隔离和模型适配，不在
 - 后置交付：报告扩展、Windows EXE/MSI、三端回归和正式分发。
 
 上述顺序是实施优先级调整，不是删除或缩减最终MVP。
+
+M5必须先由01形成专项开发说明，至少冻结知识来源白名单、版本/生效期、文档与切片标识、证据位置、引用输出、更新/删除、离线行为、跨运行权限和`转型规划结论`排除测试；若翎确认后02才可实施。

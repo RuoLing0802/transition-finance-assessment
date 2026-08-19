@@ -1,11 +1,11 @@
 # 企业转型金融智能评估系统总体实施计划
 
-**版本**：v1.8
+**版本**：v1.9
 **日期**：2026-08-19
-**状态**：总体方案已确认；M1整改和M2核心基线已通过01正式审查与集成；下一阶段为M3专业Agent工作台前端重构，Windows和报告扩展后置
+**状态**：总体方案已确认；M1—M4已通过01正式审查与集成；下一阶段为M5知识检索策划，Windows和报告扩展后置
 **项目负责人/主要软件开发者/技术集成人**：若翎
 **计划来源**：用户确认的总体方案与2026-08-09精简协作决策
-**项目阶段**：M2核心基线完成；M3等待02获得精确口令后实施
+**项目阶段**：M3专业Agent工作台和M4可恢复工作流完成；M5尚未启动
 
 **开发门槛**：只有收到完全一致的口令“开始开发MVP”后才进入程序开发；本计划当前不授权编程。
 
@@ -107,7 +107,7 @@ flowchart LR
 
 具体依赖版本、服务器配置、签名证书、公证、权限模型以及外部模型的服务商、模型版本、成本和回退方式属于后续确认项。
 
-截至2026-08-19，当前正式基线实际使用静态HTML/CSS/JavaScript前端、Python/FastAPI/Pydantic后端、原生`sqlite3`持久化、`openpyxl`及PDF/DOCX/图片解析适配、OpenAI兼容会话模型、PyWebView和PyInstaller。React、TypeScript、Vite、Ant Design和ECharts将在M3接入；SQLAlchemy、PostgreSQL、LangChain、LangGraph、知识检索、正式碳核算、行业基准和评分引擎均尚未接入。目标架构与已接入架构不得混写。
+截至2026-08-19，当前正式基线实际使用React、TypeScript、Vite、Ant Design、ECharts前端，Python/FastAPI/Pydantic后端，原生`sqlite3`持久化，`openpyxl`及PDF/DOCX/图片解析适配，OpenAI兼容会话模型，LangGraph状态运行时、LangChain Core确定性节点包装、PyWebView和PyInstaller。SQLAlchemy、PostgreSQL、知识检索、正式碳核算、行业基准和评分引擎均尚未接入。目标架构与已接入架构不得混写。
 
 ### 4.2 核心接口方向
 
@@ -149,17 +149,23 @@ flowchart LR
 
 ### 5.6 第二开发里程碑（核心基线已完成）
 
-M2核心基线已经完成M1整改、领域模型与SQLite持久化、多企业工作空间、单运行隔离、多模态适配、受控模型编排、基础报告/对比、默认配套数据自动加载与恢复，以及macOS桌面入口。当前前端仍是静态HTML/CSS/JavaScript，不得写成React已经接入；Windows EXE/MSI没有在真实Windows环境构建或验收，未纳入本次基线。
+M2核心基线当时完成M1整改、领域模型与SQLite持久化、多企业工作空间、单运行隔离、多模态适配、受控模型编排、基础报告/对比、默认配套数据自动加载与恢复，以及macOS桌面入口；当时前端仍为静态HTML/CSS/JavaScript。React前端已在后续M3接入。Windows EXE/MSI没有在真实Windows环境构建或验收，未纳入当前基线。
 
 1000企业工作簿作为可复用数据批次导入，当前评估运行必须选择并绑定唯一企业；同一工作空间评估其他企业时创建新的运行并复用批次。对话回答、工具执行和报告只归入当前运行，发现跨企业冲突时阻断。已完成运行可生成企业对比视图，但不同期间、规则版本或口径不一致时标记不可直接比较。外部模型不可用时，离线固定流程仍完成基础解析、质量、查询、目录和基础输出闭环。M2不直接确定正式评分、碳核算、模型效果或授信结论。
 
-### 5.7 第三开发里程碑（M3专业Agent工作台）
+### 5.7 第三开发里程碑（M3专业Agent工作台，已完成）
 
-M3以[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v0.6与[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0为02执行依据，实施React、TypeScript、Vite、Ant Design和ECharts前端迁移。界面采用可折叠三栏：左侧工作空间/企业运行，中间简洁Agent会话，右侧评估检查器；配套模拟数据是默认主数据集，补充材料归入当前企业运行。
+M3以[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v0.6与[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0为02历史执行依据，已经完成React、TypeScript、Vite、Ant Design和ECharts前端迁移。界面采用可折叠三栏：左侧工作空间/企业运行，中间简洁Agent会话，右侧评估检查器；配套模拟数据是默认主数据集，补充材料归入当前企业运行。
 
-M3只展示真实已接入能力和明确未就绪状态。碳核算、行业对标、转型行为、评分和信贷支持分别显示`not_calculable`、`pending_methodology`或`not_implemented`，不得用假进度、假评分或模拟效果占位。M3不接入LangGraph、LangChain、LlamaIndex、Qdrant、RAGFlow、正式碳核算/评分、Windows和报告扩展。
+M3只展示真实已接入能力和明确未就绪状态。碳核算、行业对标、转型行为、评分和信贷支持分别显示`not_calculable`、`pending_methodology`或`not_implemented`，没有使用假进度、假评分或模拟效果占位。M3未提前接入LangGraph、LangChain、LlamaIndex、Qdrant、RAGFlow、正式碳核算/评分、Windows或报告扩展。
 
-后续开发顺序为：M4 LangGraph状态运行时与LangChain组件层 → M5知识检索 → M6碳核算 → M7行业对标与转型行为 → M8评分与信贷支持 → 报告扩展、Windows与正式分发。该顺序调整不改变“8行业框架＋2行业深验”最终MVP范围。
+### 5.8 第四开发里程碑（M4可恢复工作流，已完成）
+
+M4已接入两类确定性评估工作流：`baseline_review`和`evidence_followup`。LangGraph只负责节点图、条件路由和运行时检查点；LangChain Core只通过`RunnableLambda`包装确定性节点。SQLite持久化`workspace_id`、`assessment_run_id`、`enterprise_id`、派生`thread_id`、版本和安全状态，并通过严格乐观锁阻止陈旧写入。
+
+M4支持暂停、恢复、显式“暂不补充”和人工通过/退回；非法状态迁移、空回答、重复暂停和跨运行访问均受后端约束。工作流使用白名单分析视图，排除`reference_comparison`；`转型规划结论`不进入模型输入、检索、特征或标签。外部框架不可用时保留确定性离线回退。M4仍同步执行到等待点，不宣称长任务实时中断、高并发性能或真实模型工作流效果已经验证。
+
+后续开发顺序为：M5知识检索 → M6碳核算 → M7行业对标与转型行为 → M8评分与信贷支持 → 报告扩展、Windows与正式分发。该顺序调整不改变“8行业框架＋2行业深验”最终MVP范围。M5必须另行形成开发说明并经若翎确认，不因M4集成自动启动。
 
 ## 6. 团队实施方案
 
@@ -171,7 +177,7 @@ M3只展示真实已接入能力和明确未就绪状态。碳核算、行业对
 |---|---|---|
 | `00_项目上下文整理与Codex交接包` | 已完成，可归档 | 仅保留早期上下文整理成果，不承担后续日常管理 |
 | `01_项目总控与决策` | 当前主对话 | 维护本计划、重大决策和项目状态；审查成员成果；经若翎确认后正式合并、提交和推送；不承担日常软件编码 |
-| `02_软件开发` | M2核心基线已正式集成；M3待启动 | 按`DEVELOPMENT_BRIEF.md` v0.6与`M3_DEVELOPMENT_PROMPT.md` v1.0实施React专业Agent工作台；M4以后再推进编排、知识检索和评估引擎；成果交给01审查，不自行提交或推送 |
+| `02_软件开发` | M1—M4已正式集成；M5待策划 | 按`DEVELOPMENT_BRIEF.md` v0.7和后续阶段说明实施；M5不得提前实现碳核算、评分、Windows或报告扩展；成果交给01审查，不自行提交或推送 |
 | `03_数据、政策与评分体系` | 可开展非开发研究 | 负责正式数据导入与审计、政策标准、行业规则、指标体系和评分校准；形成结论后由 `01` 更新正式计划、决策与状态 |
 | `04_报告、PPT与答辩` | 暂不创建 | 待程序、数据和评分体系基本稳定后再建立 |
 

@@ -127,3 +127,45 @@ export type ConversationResponse = {
   tool_results?: Array<{ tool_name: string; status: string; result?: Json; error?: Json }>;
   data_notice?: string;
 };
+
+export type WorkflowDefinition = {
+  workflow_name: 'baseline_review' | 'evidence_followup';
+  label: string;
+  description: string;
+  nodes: string[];
+  pause_points: string[];
+};
+
+export type WorkflowCheckpoint = {
+  checkpoint_id: string;
+  assessment_run_id: string;
+  enterprise_id: string;
+  enterprise_code: string;
+  workflow_name: 'baseline_review' | 'evidence_followup';
+  thread_id: string;
+  status: 'running' | 'paused' | 'waiting_for_input' | 'waiting_human_review' | 'completed';
+  current_node?: string | null;
+  version: number;
+  state: {
+    completed_nodes?: string[];
+    node_status?: Record<string, string>;
+    follow_up_questions?: string[];
+    pause_reason?: string | null;
+    answer_count?: number;
+    no_additional_confirmed?: boolean;
+    quality_issue_count?: number;
+    attachment_count?: number;
+    review_decision?: string | null;
+  };
+  checkpoint?: Json;
+  updated_at?: string;
+};
+
+export type WorkflowList = {
+  assessment_run_id: string;
+  engine: 'langgraph' | 'deterministic_fallback';
+  thread_binding: string;
+  definitions: WorkflowDefinition[];
+  workflows: WorkflowCheckpoint[];
+  notice: string;
+};

@@ -67,6 +67,19 @@ class ConversationTurnCreate(BaseModel):
     mode: Literal["auto", "offline"] = "auto"
 
 
+class WorkflowStartRequest(BaseModel):
+    workflow_name: Literal["baseline_review", "evidence_followup"]
+
+
+class WorkflowResumeRequest(BaseModel):
+    answers: list[str] = Field(default_factory=list, max_length=10)
+    confirm_no_additional: bool = False
+
+
+class WorkflowReviewRequest(BaseModel):
+    decision: Literal["approve", "request_changes"]
+
+
 class ReportArtifactCreate(BaseModel):
     report_type: str = Field(min_length=1, max_length=80)
     file_format: Literal["md", "pdf", "docx"]

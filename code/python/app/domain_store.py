@@ -14,7 +14,7 @@ from .config import APPLICATION_DATA_ROOT, REQUIRED_HEADERS, SIMULATED_DATA_NOTI
 from .parsers.multimodal import safe_filename
 
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,24}-[A-Za-z0-9_-]{2,80}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 COMPARABLE_RUN_STATUSES = {"completed", "archived"}
@@ -276,6 +276,31 @@ class DomainStore:
                     CREATE INDEX IF NOT EXISTS idx_model_configs_updated
                         ON model_configs(updated_at DESC);
                     PRAGMA user_version = 4;
+                    """
+                )
+            if version < 5:
+                connection.executescript(
+                    """
+                    CREATE TABLE IF NOT EXISTS workflow_checkpoints (
+                        checkpoint_id TEXT PRIMARY KEY,
+                        workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                        assessment_run_id TEXT NOT NULL REFERENCES assessment_runs(assessment_run_id),
+                        enterprise_id TEXT NOT NULL REFERENCES enterprise_profiles(enterprise_id),
+                        workflow_name TEXT NOT NULL,
+                        thread_id TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        current_node TEXT,
+                        version INTEGER NOT NULL DEFAULT 1,
+                        state_json TEXT NOT NULL,
+                        checkpoint_json TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL,
+                        UNIQUE(assessment_run_id, workflow_name),
+                        UNIQUE(thread_id)
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_workflow_checkpoints_run
+                        ON workflow_checkpoints(assessment_run_id, updated_at DESC);
+                    PRAGMA user_version = 5;
                     """
                 )
 
@@ -1090,6 +1115,144 @@ class DomainStore:
                 (assessment_run_id,),
             ).fetchall()
             return [self._orchestration_event(item, run=run) for item in rows]
+
+    @staticmethod
+    def _workflow_checkpoint(row: sqlite3.Row, *, run: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "checkpoint_id": row["checkpoint_id"],
+            "workspace_id": row["workspace_id"],
+            "assessment_run_id": row["assessment_run_id"],
+            "enterprise_id": row["enterprise_id"],
+            "enterprise_code": run["enterprise_code"],
+            "workflow_name": row["workflow_name"],
+            "thread_id": row["thread_id"],
+            "status": row["status"],
+            "current_node": row["current_node"],
+            "version": row["version"],
+            "state": _loads(row["state_json"], {}),
+            "checkpoint": _loads(row["checkpoint_json"], {}),
+            "created_at": row["created_at"],
+            "updated_at": row["updated_at"],
+            "source_batch_id": run["source_batch_id"],
+            "simulated_data": run["simulated_data"],
+            "data_notice": run["data_notice"],
+            "rule_version": run["rule_version"],
+        }
+
+    def upsert_workflow_checkpoint(
+        self,
+        assessment_run_id: str,
+        *,
+        workflow_name: str,
+        thread_id: str,
+        status: str,
+        current_node: str | None,
+        version: int,
+        state: dict[str, Any],
+        checkpoint: dict[str, Any],
+    ) -> dict[str, Any]:
+        validate_domain_id(assessment_run_id)
+        if not workflow_name.strip() or not thread_id.strip() or not status.strip():
+            raise DomainValidationError("工作流检查点必须包含流程名、线程标识和状态")
+        if not isinstance(state, dict) or not isinstance(checkpoint, dict):
+            raise DomainValidationError("工作流检查点状态必须是对象")
+        with self._connection() as connection:
+            run_row = connection.execute(
+                "SELECT * FROM assessment_runs WHERE assessment_run_id = ?", (assessment_run_id,)
+            ).fetchone()
+            if run_row is None:
+                raise DomainNotFoundError(f"评估运行不存在：{assessment_run_id}")
+            now = _now()
+            existing = connection.execute(
+                "SELECT * FROM workflow_checkpoints WHERE assessment_run_id = ? AND workflow_name = ?",
+                (assessment_run_id, workflow_name),
+            ).fetchone()
+            if existing is None:
+                if int(version) != 1:
+                    raise DomainConflictError("新工作流检查点版本必须从1开始")
+                checkpoint_id = _new_id("ckpt")
+                connection.execute(
+                    """INSERT INTO workflow_checkpoints(
+                        checkpoint_id,workspace_id,assessment_run_id,enterprise_id,workflow_name,
+                        thread_id,status,current_node,version,state_json,checkpoint_json,created_at,updated_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        checkpoint_id,
+                        run_row["workspace_id"],
+                        assessment_run_id,
+                        run_row["enterprise_id"],
+                        workflow_name.strip(),
+                        thread_id.strip(),
+                        status.strip(),
+                        current_node,
+                        max(1, int(version)),
+                        _json(state),
+                        _json(checkpoint),
+                        now,
+                        now,
+                    ),
+                )
+            else:
+                if existing["thread_id"] != thread_id:
+                    raise DomainConflictError("工作流线程标识与已有评估运行不一致")
+                expected_version = int(existing["version"]) + 1
+                if int(version) != expected_version:
+                    raise DomainConflictError(
+                        f"工作流检查点版本冲突：期望{expected_version}，收到{version}"
+                    )
+                checkpoint_id = existing["checkpoint_id"]
+                cursor = connection.execute(
+                    """UPDATE workflow_checkpoints SET status = ?, current_node = ?, version = ?,
+                        state_json = ?, checkpoint_json = ?, updated_at = ?
+                        WHERE checkpoint_id = ? AND version = ?""",
+                    (
+                        status.strip(),
+                        current_node,
+                        int(version),
+                        _json(state),
+                        _json(checkpoint),
+                        now,
+                        checkpoint_id,
+                        int(version) - 1,
+                    ),
+                )
+                if cursor.rowcount != 1:
+                    raise DomainConflictError("工作流检查点已被其他操作更新，请刷新后重试")
+            row = connection.execute(
+                "SELECT * FROM workflow_checkpoints WHERE checkpoint_id = ?", (checkpoint_id,)
+            ).fetchone()
+            return self._workflow_checkpoint(row, run=self._run(connection, run_row))
+
+    def get_workflow_checkpoint(self, assessment_run_id: str, workflow_name: str) -> dict[str, Any]:
+        validate_domain_id(assessment_run_id)
+        with self._connection() as connection:
+            run_row = connection.execute(
+                "SELECT * FROM assessment_runs WHERE assessment_run_id = ?", (assessment_run_id,)
+            ).fetchone()
+            if run_row is None:
+                raise DomainNotFoundError(f"评估运行不存在：{assessment_run_id}")
+            row = connection.execute(
+                "SELECT * FROM workflow_checkpoints WHERE assessment_run_id = ? AND workflow_name = ?",
+                (assessment_run_id, workflow_name),
+            ).fetchone()
+            if row is None:
+                raise DomainNotFoundError(f"当前运行尚未启动流程：{workflow_name}")
+            return self._workflow_checkpoint(row, run=self._run(connection, run_row))
+
+    def list_workflow_checkpoints(self, assessment_run_id: str) -> list[dict[str, Any]]:
+        validate_domain_id(assessment_run_id)
+        with self._connection() as connection:
+            run_row = connection.execute(
+                "SELECT * FROM assessment_runs WHERE assessment_run_id = ?", (assessment_run_id,)
+            ).fetchone()
+            if run_row is None:
+                raise DomainNotFoundError(f"评估运行不存在：{assessment_run_id}")
+            rows = connection.execute(
+                "SELECT * FROM workflow_checkpoints WHERE assessment_run_id = ? ORDER BY updated_at DESC",
+                (assessment_run_id,),
+            ).fetchall()
+            run = self._run(connection, run_row)
+            return [self._workflow_checkpoint(row, run=run) for row in rows]
 
     @staticmethod
     def _report_artifact(row: sqlite3.Row, *, run: dict[str, Any]) -> dict[str, Any]:

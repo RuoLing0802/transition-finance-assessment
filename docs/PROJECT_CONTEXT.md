@@ -1,8 +1,8 @@
 # 项目主上下文
 
-**版本**：v1.2
+**版本**：v1.3
 **日期**：2026-08-19
-**状态**：M1整改与M2核心基线已通过01正式审查和集成；M3专业Agent工作台等待02获得精确口令后实施；Windows和报告扩展后置
+**状态**：M1—M4已通过01正式审查和集成；M5知识检索待单独策划和授权；Windows和报告扩展后置
 **项目负责人/主要软件开发者/技术集成人**：若翎
 **适用对象**：项目成员、项目成员各自的Codex、只读型研究或评审Agent
 
@@ -100,7 +100,7 @@ flowchart LR
 
 目标技术路线：React、TypeScript、Vite、Ant Design、ECharts；Python、FastAPI、Pydantic、SQLAlchemy；桌面版SQLite、服务器版PostgreSQL；本地不可变原件目录与SHA-256；PyMuPDF/pdfplumber、python-docx、openpyxl、PaddleOCR；JSON/YAML行业模板；Jinja2、ReportLab、python-docx；PyWebView和PyInstaller。具体版本、生产配置、签名、公证和服务器规格仍需后续确认。
 
-当前正式基线实际使用静态HTML/CSS/JavaScript、Python、FastAPI、Pydantic、原生`sqlite3`、`openpyxl`、PDF/DOCX/图片解析适配、OpenAI兼容会话模型、PyWebView和PyInstaller。React技术栈将在M3接入；SQLAlchemy、PostgreSQL、LangChain、LangGraph、知识检索、正式碳核算和评分引擎尚未接入。项目文档必须把目标技术与实际接入分开表述。
+当前正式基线实际使用React、TypeScript、Vite、Ant Design、ECharts、Python、FastAPI、Pydantic、原生`sqlite3`、`openpyxl`、PDF/DOCX/图片解析适配、OpenAI兼容会话模型、LangGraph、LangChain Core、PyWebView和PyInstaller。M4使用LangGraph承载运行级状态图、条件路由和检查点，使用LangChain Core的`RunnableLambda`包装确定性节点；SQLite是持久化检查点的真实来源。SQLAlchemy、PostgreSQL、知识检索、正式碳核算和评分引擎尚未接入。项目文档必须把目标技术与实际接入分开表述。
 
 智能会话模式使用外部大模型调度当前评估运行：理解用户意图、规划步骤、调用受控工具、生成动态补问并解释结构化结果。一个工作空间可包含多个企业运行，但每次运行只绑定一家企业。模型选择器只选择会话调度模型；规则、因子、评分和行业模板在独立评估配置中管理。模型可以适度参与非结构化抽取、候选分析和文字生成，但不能篡改事实、公式或直接作出授信决定。为统一可运行性测试保留离线固定流程模式；多模态模型输出仍须结构校验、证据绑定和低置信度人工复核。
 
@@ -108,15 +108,15 @@ LangChain作为可选的模型、工具、提示和Agent集成层；LangGraph作
 
 ## 8. 开发里程碑与MVP范围
 
-02下一阶段以[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v0.6与[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0为执行依据；01只负责方案、审查、正式合并和Git操作，不承担日常编码。
+02后续开发以[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v0.7和届时由01发布的阶段说明为依据；[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0保留为历史执行依据。01只负责方案、审查、正式合并和Git操作，不承担日常编码。
 
-M1整改与M2核心基线已完成正式审查。当前覆盖配套Excel自动加载/上传、五表校验、企业代号关联、详情展示、2024—2025能耗变化、缺失提示、目录匹配、参考结论隔离、多企业工作空间、单运行隔离、多模态适配、受控模型编排、基础对比/输出和macOS桌面入口。全量Python测试在允许本机端口的环境中为`54 passed`，5条警告来自第三方PDF依赖弃用提示。
+M1—M4已完成正式审查。当前覆盖配套Excel自动加载/上传、五表校验、企业代号关联、详情展示、2024—2025能耗变化、缺失提示、目录匹配、参考结论隔离、多企业工作空间、单运行隔离、多模态适配、受控模型编排、React专业Agent工作台、运行级可恢复工作流、基础对比/输出和macOS桌面入口。M4分拆验证覆盖全部`60`项Python测试；受限沙箱中的唯一失败来自桌面烟测端口权限，同一用例在允许本机端口环境中通过。前端为`3 test files / 5 tests passed`。
 
-若翎已确认保持“一个工作空间多企业、一次评估运行一企业”的内部模型。M3将当前信息密集型静态页面迁移为React专业Agent工作台：左侧为工作空间和企业运行，中间为简洁会话，右侧为可折叠评估检查器。配套模拟工作簿是默认主数据集，补充文件只归入当前运行。模型选择器只选择会话调度模型，规则/评分配置保持独立。
+若翎已确认保持“一个工作空间多企业、一次评估运行一企业”的内部模型。M3已经把信息密集型静态页面迁移为React专业Agent工作台：左侧为工作空间和企业运行，中间为简洁会话，右侧为可折叠评估检查器。配套模拟工作簿是默认主数据集，补充文件只归入当前运行。模型选择器只选择会话调度模型，规则/评分配置保持独立。
 
-M3不同时接入LangGraph/LangChain、知识检索、正式碳核算、行业对标、评分、Windows和报告扩展。M4再根据暂停恢复、人工介入和长流程需要引入LangGraph状态运行时与LangChain组件；M5建设知识检索；M6—M8依次推进碳核算、行业对标/转型行为、评分与信贷支持。Windows和报告扩展在核心评估链稳定后处理。
+M4已按阶段顺序引入LangGraph状态运行时和LangChain Core组件，支持两类确定性工作流、SQLite检查点、暂停/恢复、人工确认、严格乐观锁、跨运行隔离、新进程恢复与离线回退。工作流输入使用白名单视图，源头排除`reference_comparison`；`转型规划结论`不进入模型输入、检索、特征或标签。M4仍是同步执行到等待点，不宣称已验证长任务实时中断或高并发性能。M5建设知识检索；M6—M8依次推进碳核算、行业对标/转型行为、评分与信贷支持。Windows和报告扩展在核心评估链稳定后处理。
 
-M1和M2均不改变完整“8行业框架＋2行业深验”MVP范围，也不代表正式评分、碳核算、模型效果或真实业务效果已经完成。精确开发口令“开始开发MVP”继续作为启动新开发实施的长期权限边界；具体实施统一由02执行。
+M1—M4均不改变完整“8行业框架＋2行业深验”MVP范围，也不代表正式评分、碳核算、模型效果或真实业务效果已经完成。精确开发口令“开始开发MVP”继续作为启动新开发实施的长期权限边界；具体实施统一由02执行。
 
 
 完整MVP范围概括为“8行业框架＋2行业深验”，并包含以下可运行、可测试、可追溯能力：
@@ -164,9 +164,9 @@ MVP必须完整保留以下范围，不得因单个成员开发压力而删除�
 - 已完成：登记命题方配套模拟数据的来源、文件大小、工作表、SHA-256及ZIP内外文件一致性；确认工作表输入/规则/参考结论边界。
 - 已完成：03提交的配套数据初步审计结果已由`01`区分事实与候选方案并归档；四表主键闭合、主要缺失与重复、单位观察、语义一致性、目录覆盖缺口和参考结论隔离边界已写入正式文档。
 - 已完成：M1整改与M2核心基线已通过01审查；全量Python回归为`54 passed`，参考结论泄漏隔离和运行级企业隔离继续有效。
-- 已完成：[`DEVELOPMENT_REVIEW.md`](DEVELOPMENT_REVIEW.md) v0.2、[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v0.6与[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0已形成正式审查及下一阶段执行依据。
-- 下一步：若翎在02发送精确口令后，由02实施M3 React专业Agent工作台；由01进行里程碑审查和正式集成。03并行继续核验数据字典、字段口径、标签、目录来源、排放因子和折标系数。
-- 尚未开始或尚未完成：React前端迁移、LangGraph/LangChain、知识检索、正式评分校准、碳核算、行业对标、模型效果验证、Windows交付、生产部署和竞赛最终材料制作。
+- 已完成：M3 React专业Agent工作台和M4可恢复工作流已由01审查并正式集成；[`DEVELOPMENT_REVIEW.md`](DEVELOPMENT_REVIEW.md) v0.3、[`M4_DEVELOPMENT_REVIEW.md`](M4_DEVELOPMENT_REVIEW.md) v1.0和[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v0.7记录当前正式状态。
+- 下一步：由01先形成M5知识检索的来源、版本、证据与隔离方案，若翎确认后再交02实施。03并行继续核验数据字典、字段口径、标签、目录来源、排放因子和折标系数。
+- 尚未开始或尚未完成：知识检索、正式评分校准、碳核算、行业对标、模型效果验证、Windows交付、生产部署和竞赛最终材料制作。
 - 当前缺口：独立数据字典、训练/测试划分、正式评分标签、标准全文、排放因子和部分行业资料未齐；宽转长、缺失等级、质量阻断、目录`rule_id`、评分权重、阈值、模型和第二深验行业待确认。这些缺口影响校准与后续实现，但不改变既有MVP范围。
 
 ### 主要风险

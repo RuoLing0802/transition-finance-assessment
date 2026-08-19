@@ -8,6 +8,8 @@ import type {
   ProcessSummary,
   SourceBatch,
   Workspace,
+  WorkflowCheckpoint,
+  WorkflowList,
 } from './contracts';
 
 const API_PREFIX = '/api/v1';
@@ -42,6 +44,20 @@ export const api = {
   getCompanyDetail: (runId: string) => request<CompanyDetail>(`/assessment-runs/${runId}/company-detail`),
   listMessages: (runId: string) => request<{ messages: Message[] }>(`/assessment-runs/${runId}/messages`),
   getProcessSummary: (runId: string) => request<ProcessSummary>(`/assessment-runs/${runId}/conversation/summary`),
+  listWorkflows: (runId: string) => request<WorkflowList>(`/assessment-runs/${runId}/workflows`),
+  startWorkflow: (runId: string, workflowName: WorkflowCheckpoint['workflow_name']) => request<WorkflowCheckpoint>(`/assessment-runs/${runId}/workflows/start`, {
+    method: 'POST',
+    body: JSON.stringify({ workflow_name: workflowName }),
+  }),
+  pauseWorkflow: (runId: string, workflowName: WorkflowCheckpoint['workflow_name']) => request<WorkflowCheckpoint>(`/assessment-runs/${runId}/workflows/${workflowName}/pause`, { method: 'POST' }),
+  resumeWorkflow: (runId: string, workflowName: WorkflowCheckpoint['workflow_name'], answers: string[] = [], confirmNoAdditional = false) => request<WorkflowCheckpoint>(`/assessment-runs/${runId}/workflows/${workflowName}/resume`, {
+    method: 'POST',
+    body: JSON.stringify({ answers, confirm_no_additional: confirmNoAdditional }),
+  }),
+  reviewWorkflow: (runId: string, workflowName: WorkflowCheckpoint['workflow_name'], decision: 'approve' | 'request_changes') => request<WorkflowCheckpoint>(`/assessment-runs/${runId}/workflows/${workflowName}/review`, {
+    method: 'POST',
+    body: JSON.stringify({ decision }),
+  }),
   listAttachments: (runId: string) => request<{ attachments: Attachment[] }>(`/assessment-runs/${runId}/attachments`),
   getModels: () => request<{ models: ModelOption[]; external_configured: boolean; default_model_id?: string | null }>('/models'),
   getParserCapabilities: () => request<Record<string, unknown>>('/parsers/capabilities'),
