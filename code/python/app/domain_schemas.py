@@ -9,6 +9,15 @@ class WorkspaceCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 
 
+class ModelConfigCreate(BaseModel):
+    model_name: str = Field(min_length=1, max_length=160)
+    display_name: str | None = Field(default=None, max_length=160)
+    provider_id: str = Field(default="openai-compatible", min_length=1, max_length=80)
+    base_url: str = Field(min_length=1, max_length=2000)
+    api_key: str = Field(min_length=1, max_length=4096)
+    supports_vision: bool = False
+
+
 class SourceBatchRegister(BaseModel):
     batch_id: str = Field(min_length=3, max_length=80)
     source: str = Field(default="local_upload", max_length=80)

@@ -3,6 +3,13 @@ from pathlib import Path
 
 PYTHON_ROOT = Path(SPECPATH).resolve().parent
 APP_ROOT = PYTHON_ROOT / "app"
+PROJECT_ROOT = PYTHON_ROOT.parents[1]
+WORKBOOK_CANDIDATES = [
+    PROJECT_ROOT / "27-多模态技术与数据治理赛道-碳迹可循，绿贷智评：基于多维度数据与行业标准的企业转型金融评估系统" / "配套数据.xlsx",
+    PYTHON_ROOT / "packaging" / "bundled_data" / "default_workbook.xlsx",
+]
+DEFAULT_WORKBOOK = next((path for path in WORKBOOK_CANDIDATES if path.is_file()), None)
+bundled_datas = [(str(DEFAULT_WORKBOOK), "app/bundled_data")] if DEFAULT_WORKBOOK else []
 hiddenimports = [
     "app.main",
     "uvicorn.config",
@@ -18,7 +25,7 @@ a = Analysis(
     [str(PYTHON_ROOT / "desktop" / "launcher.py")],
     pathex=[str(PYTHON_ROOT)],
     binaries=[],
-    datas=[(str(APP_ROOT / "static"), "app/static")],
+    datas=[(str(APP_ROOT / "static"), "app/static"), *bundled_datas],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},

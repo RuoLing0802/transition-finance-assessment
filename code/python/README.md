@@ -20,11 +20,11 @@ E阶段新增会话模型能力发现、运行级上下文、只读工具白名�
 /opt/anaconda3/bin/python code/python/run_m1.py
 ```
 
-打开 `http://127.0.0.1:8015/`。M1兼容流程的批次原件、元数据和报告保存在 `code/python/.m1_runtime/`，该目录已被 `.gitignore` 排除。B阶段域层默认使用：macOS `~/Library/Application Support/TransitionFinanceAssessment/`，Windows `%LOCALAPPDATA%/TransitionFinanceAssessment/`；测试可用 `TRANSITION_FINANCE_APP_DATA_ROOT` 指向临时目录。
+打开 `http://127.0.0.1:8015/`。系统会自动发现并解析项目内的比赛配套工作簿 `配套数据.xlsx`，首次启动后即可直接创建企业评估，不要求用户重复上传；上传入口仅用于管理员替换或测试其他工作簿。M1兼容流程的批次原件、元数据和报告保存在 `code/python/.m1_runtime/`，该目录已被 `.gitignore` 排除。B阶段域层默认使用：macOS `~/Library/Application Support/TransitionFinanceAssessment/`，Windows `%LOCALAPPDATA%/TransitionFinanceAssessment/`；测试可用 `TRANSITION_FINANCE_APP_DATA_ROOT` 指向临时目录。
 
 图片和扫描PDF的外部解析使用后端受控的OpenAI兼容接口；配置 `TRANSITION_FINANCE_MULTIMODAL_API_BASE_URL`、`TRANSITION_FINANCE_MULTIMODAL_API_KEY`、`TRANSITION_FINANCE_MULTIMODAL_MODEL`，可选配置 `TRANSITION_FINANCE_MULTIMODAL_PROVIDER`、`TRANSITION_FINANCE_MULTIMODAL_PROMPT_VERSION` 和 `TRANSITION_FINANCE_MULTIMODAL_TIMEOUT_SECONDS`。密钥不进入前端、报告、普通日志或能力接口响应；接口未配置或失败时保留原件并进入人工复核。
 
-会话模型使用另一组后端环境变量：`TRANSITION_FINANCE_SESSION_API_BASE_URL`、`TRANSITION_FINANCE_SESSION_API_KEY`，可选 `TRANSITION_FINANCE_SESSION_MODEL`、`TRANSITION_FINANCE_SESSION_PROVIDER`、`TRANSITION_FINANCE_SESSION_TIMEOUT` 和 `TRANSITION_FINANCE_SESSION_MAX_RETRIES`。未设置默认模型时使用内置默认会话模型 `qwen3.7-plus`；界面仍允许从已配置的模型目录中选择其他模型。`GET /api/v1/model-providers` 和 `GET /api/v1/models` 只返回已配置且位于受控能力目录中的外部模型，不返回密钥；当前不强制引入LangChain或LangGraph。真实供应商联调必须在受控环境配置兼容接口后单独验收，仓库测试使用本地模拟传输。
+会话模型使用另一组后端环境变量：`TRANSITION_FINANCE_SESSION_API_BASE_URL`、`TRANSITION_FINANCE_SESSION_API_KEY`，可选 `TRANSITION_FINANCE_SESSION_MODEL`、`TRANSITION_FINANCE_SESSION_PROVIDER`、`TRANSITION_FINANCE_SESSION_TIMEOUT` 和 `TRANSITION_FINANCE_SESSION_MAX_RETRIES`。未设置默认模型时使用内置默认会话模型 `qwen3.7-plus`。用户也可以在工作台“添加模型”中填写兼容OpenAI Chat Completions的接口地址、API key和模型名称；配置只保存到本机后端应用数据中的SQLite，不回传API key，模型列表只显示脱敏配置。`GET /api/v1/model-providers` 和 `GET /api/v1/models` 会合并环境变量模型与用户自定义模型；`POST/GET/DELETE /api/v1/model-configs` 提供对应配置接口。当前不强制引入LangChain或LangGraph。真实供应商联调必须在受控环境配置兼容接口后单独验收，仓库测试使用本地模拟传输。
 
 普通用户界面默认不展示模型、工具和审计调试信息。团队管理员可在受控环境设置 `TRANSITION_FINANCE_ADMIN_PASSWORD` 后，从工作台的“团队管理员入口”进入诊断视图；未配置口令时该入口不可用，不提供默认密码。管理员入口只控制诊断界面展示，不改变规则、评分、事实或报告边界。
 
@@ -38,6 +38,7 @@ E阶段新增会话模型能力发现、运行级上下文、只读工具白名�
 - `GET /api/v1/companies/{company_code}/catalog-matches?batch_id={batch_id}`
 - `POST /api/v1/reports/basic`
 - `POST/GET /api/v1/workspaces`
+- `GET /api/v1/source-batches/default`
 - `POST /api/v1/source-batches`
 - `POST/GET /api/v1/workspaces/{workspace_id}/runs`
 - `GET/PATCH /api/v1/assessment-runs/{assessment_run_id}`
@@ -49,6 +50,7 @@ E阶段新增会话模型能力发现、运行级上下文、只读工具白名�
 - `GET /api/v1/parsers/capabilities`
 - `GET /api/v1/model-providers`
 - `GET /api/v1/models`
+- `POST/GET/DELETE /api/v1/model-configs`
 - `POST/GET /api/v1/assessment-runs/{assessment_run_id}/attachments`
 - `GET /api/v1/assessment-runs/{assessment_run_id}/attachments/{attachment_id}`
 - `POST /api/v1/assessment-runs/{assessment_run_id}/conversation/turn`

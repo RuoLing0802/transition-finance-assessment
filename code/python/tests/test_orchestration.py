@@ -121,6 +121,34 @@ def test_openai_compatible_session_adapter_retries_rate_limit_once(monkeypatch: 
     assert calls["count"] == 2
 
 
+def test_custom_model_config_can_drive_session_without_exposing_key(orchestration_client: TestClient) -> None:
+    saved = orchestration_client.post(
+        "/api/v1/model-configs",
+        json={
+            "model_name": "custom-session-model",
+            "base_url": "https://custom.example/v1",
+            "api_key": "secret-custom-session-key",
+        },
+    ).json()["model"]
+    captured: dict = {}
+
+    def transport(url: str, headers: dict, payload: dict, timeout: float) -> dict:
+        captured.update({"url": url, "headers": headers, "payload": payload, "timeout": timeout})
+        return {"choices": [{"message": {"content": '{"assistant_text":"ok","actions":[],"follow_up_questions":[]}'}}]}
+
+    provider = OpenAICompatibleSessionProvider.from_environment(
+        model_id=saved["model_id"],
+        model_config_loader=lambda model_id: main.domain_store.get_model_config(model_id, include_secret=True),
+        transport=transport,
+    )
+    assert provider.capability()["available"] is True
+    assert provider.capability()["model_id"] == saved["model_id"]
+    assert "secret-custom-session-key" not in json.dumps(provider.capability(), ensure_ascii=False)
+    assert provider.complete([], [], purpose="test")["assistant_text"] == "ok"
+    assert captured["payload"]["model"] == "custom-session-model"
+    assert captured["headers"]["Authorization"] == "Bearer secret-custom-session-key"
+
+
 def test_unknown_configured_model_is_not_available(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("TRANSITION_FINANCE_SESSION_API_BASE_URL", "https://example.invalid/v1")
     monkeypatch.setenv("TRANSITION_FINANCE_SESSION_API_KEY", "sk-test-only")

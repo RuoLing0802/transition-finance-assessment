@@ -8,7 +8,7 @@ from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from .model_catalog import DEFAULT_SESSION_MODEL, available_model_capabilities, get_model_catalog_entry
+from .model_catalog import DEFAULT_SESSION_MODEL, available_model_capabilities, custom_model_capability, get_model_catalog_entry
 
 
 SESSION_PROMPT_VERSION = "session-orchestration-v1"
@@ -31,6 +31,9 @@ class SessionModelConfig:
     provider_id: str = "openai-compatible"
     timeout: float = 45.0
     max_retries: int = 1
+    config_id: str | None = None
+    display_name: str | None = None
+    supports_vision: bool = False
 
 
 def _extract_content(raw: dict[str, Any]) -> str:
@@ -89,7 +92,15 @@ class OpenAICompatibleSessionProvider:
         cls,
         model_id: str | None = None,
         transport: Transport | None = None,
+        model_config_loader: Callable[[str], dict[str, Any]] | None = None,
     ) -> "OpenAICompatibleSessionProvider":
+        if model_id and model_config_loader is not None:
+            try:
+                stored_config = model_config_loader(model_id)
+            except Exception:
+                stored_config = None
+            if stored_config:
+                return cls.from_model_config(stored_config, transport=transport)
         base_url = os.environ.get("TRANSITION_FINANCE_SESSION_API_BASE_URL", "").strip()
         api_key = os.environ.get("TRANSITION_FINANCE_SESSION_API_KEY", "").strip()
         configured_model_id = os.environ.get("TRANSITION_FINANCE_SESSION_MODEL", "").strip()
@@ -116,11 +127,28 @@ class OpenAICompatibleSessionProvider:
         return cls(config, transport=transport)
 
     @classmethod
-    def available_models_from_environment(cls) -> list[dict[str, Any]]:
+    def from_model_config(cls, stored_config: dict[str, Any], transport: Transport | None = None) -> "OpenAICompatibleSessionProvider":
+        config = SessionModelConfig(
+            base_url=str(stored_config.get("base_url") or "").strip(),
+            api_key=str(stored_config.get("api_key") or ""),
+            model_id=str(stored_config.get("model_name") or "").strip(),
+            provider_id=str(stored_config.get("provider_id") or "openai-compatible").strip(),
+            timeout=max(1.0, min(float(stored_config.get("timeout", 45.0)), 180.0)),
+            max_retries=max(0, min(int(stored_config.get("max_retries", 1)), 2)),
+            config_id=str(stored_config.get("model_config_id") or "").strip() or None,
+            display_name=str(stored_config.get("display_name") or "").strip() or None,
+            supports_vision=bool(stored_config.get("supports_vision")),
+        )
+        return cls(config if config.base_url and config.api_key and config.model_id else None, transport=transport)
+
+    @classmethod
+    def available_models_from_environment(cls, custom_configs: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
         base_url = os.environ.get("TRANSITION_FINANCE_SESSION_API_BASE_URL", "").strip()
         api_key = os.environ.get("TRANSITION_FINANCE_SESSION_API_KEY", "").strip()
         provider_id = os.environ.get("TRANSITION_FINANCE_SESSION_PROVIDER", "openai-compatible").strip() or "openai-compatible"
-        return available_model_capabilities(configured=bool(base_url and api_key), provider_id=provider_id)
+        models = available_model_capabilities(configured=bool(base_url and api_key), provider_id=provider_id)
+        models.extend(custom_model_capability(config) for config in (custom_configs or []) if config.get("api_key_configured"))
+        return models
 
     def capability(self) -> dict[str, Any]:
         if self.config is None:
@@ -135,6 +163,23 @@ class OpenAICompatibleSessionProvider:
                 "mode": "external",
             }
         catalog_entry = get_model_catalog_entry(self.config.model_id)
+        public_model_id = self.config.config_id or self.config.model_id
+        if self.config.config_id:
+            supports_vision = self.config.supports_vision
+            return {
+                "available": True,
+                "provider_id": self.config.provider_id,
+                "model_id": public_model_id,
+                "provider_model": self.config.model_id,
+                "display_name": self.config.display_name or f"{self.config.provider_id}/{self.config.model_id}",
+                "context_window": None,
+                "multimodal": supports_vision,
+                "supports_vision": supports_vision,
+                "capabilities": ["text", "reasoning", "vision"] if supports_vision else ["text", "reasoning"],
+                "reason": None,
+                "mode": "external",
+                "custom": True,
+            }
         if catalog_entry is None:
             return {
                 "available": False,
@@ -151,7 +196,8 @@ class OpenAICompatibleSessionProvider:
         return {
             "available": True,
             "provider_id": self.config.provider_id,
-            "model_id": self.config.model_id,
+            "model_id": public_model_id,
+            "provider_model": self.config.model_id,
             "display_name": f"{self.config.provider_id}/{self.config.model_id}",
             "context_window": None,
             "multimodal": bool(catalog_entry and "vision" in catalog_entry["capabilities"]),

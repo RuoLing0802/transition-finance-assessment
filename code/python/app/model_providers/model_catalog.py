@@ -81,8 +81,13 @@ def model_supports_vision(model_id: str | None) -> bool:
 
 
 def vision_route(selected_model_id: str | None) -> dict[str, Any]:
+    return vision_route_with_capability(selected_model_id)
+
+
+def vision_route_with_capability(selected_model_id: str | None, *, supports_vision: bool | None = None) -> dict[str, Any]:
     selected = selected_model_id or DEFAULT_SESSION_MODEL
-    if model_supports_vision(selected):
+    selected_supports_vision = model_supports_vision(selected) if supports_vision is None else supports_vision
+    if selected_supports_vision:
         return {
             "requested_model_id": selected,
             "vision_model_id": selected,
@@ -96,6 +101,28 @@ def vision_route(selected_model_id: str | None) -> dict[str, Any]:
         "return_to_model_id": selected,
         "switched": True,
         "reason": f"所选模型 {selected} 不支持视觉理解，先由 {DEFAULT_VISION_MODEL} 提取证据，再回到 {selected} 继续会话。",
+    }
+
+
+def custom_model_capability(config: dict[str, Any]) -> dict[str, Any]:
+    model_config_id = str(config.get("model_config_id") or config.get("model_id") or "")
+    model_name = str(config.get("model_name") or "")
+    display_name = str(config.get("display_name") or model_name or model_config_id)
+    supports_vision = bool(config.get("supports_vision"))
+    return {
+        "available": bool(model_config_id and model_name and config.get("api_key_configured", True)),
+        "provider_id": config.get("provider_id") or "openai-compatible",
+        "model_id": model_config_id,
+        "provider_model": model_name,
+        "display_name": display_name,
+        "context_window": None,
+        "multimodal": supports_vision,
+        "supports_vision": supports_vision,
+        "capabilities": ["text", "reasoning", "vision"] if supports_vision else ["text", "reasoning"],
+        "recommended_for": ["用户自定义会话"],
+        "reason": None,
+        "mode": "external",
+        "custom": True,
     }
 
 

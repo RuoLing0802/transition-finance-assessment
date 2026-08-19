@@ -53,8 +53,10 @@
       .icon.small { width: 15px; height: 15px; }
       .icon.large { width: 22px; height: 22px; }
 
-      .app-shell { min-height: 100vh; display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--paper); }
-      .task-rail { min-height: 100vh; display: flex; flex-direction: column; padding: 24px 16px 18px; color: #edf7f1; background: var(--deep); }
+      .app-shell { min-height: 100vh; display: grid; grid-template-columns: 264px minmax(0, 1fr); background: var(--paper); transition: grid-template-columns 240ms var(--ease-out); }
+      .app-shell.rail-collapsed { grid-template-columns: 76px minmax(0, 1fr); }
+      .task-rail { min-height: 100vh; display: flex; flex-direction: column; padding: 24px 16px 18px; color: #edf7f1; background: var(--deep); overflow: hidden; transition: padding 240ms var(--ease-out); }
+      .app-shell.rail-collapsed .task-rail { align-items: center; padding-right: 10px; padding-left: 10px; }
       .brand { display: flex; align-items: center; gap: 12px; margin: 0 8px 30px; }
       .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 13px 13px 13px 4px; color: var(--deep); background: var(--leaf); box-shadow: 0 8px 20px rgba(0, 0, 0, .12); }
       .brand-mark .icon { width: 23px; height: 23px; stroke-width: 2.2; }
@@ -85,6 +87,28 @@
       .simulation-note .icon { color: var(--leaf); margin-top: 2px; }
       .admin-entry { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px 10px; border: 1px solid #37645f; border-radius: 10px; color: #c9ddd5; background: transparent; font-size: 12px; transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease; }
       .admin-entry:hover { color: #fff; border-color: #6b9c91; background: #1d4e4b; }
+      .source-compact { display: grid; gap: 8px; padding: 10px 0 12px; border-bottom: 1px solid #37645f; }
+      .source-compact-header { display: flex; justify-content: space-between; gap: 8px; align-items: center; color: #d9e9e2; font-size: 13px; font-weight: 700; }
+      .source-compact-header span:last-child { color: #a8c8bd; font-size: 11px; font-weight: 600; }
+      .source-upload { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 7px 8px; border: 1px solid #37645f; border-radius: 9px; color: #e8f4ed; background: #1d4e4b; transition: background-color 180ms ease, border-color 180ms ease, transform 160ms var(--ease-out); }
+      .source-upload:hover { border-color: #6b9c91; background: #285b57; transform: translateY(-1px); }
+      .source-upload input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+      .source-upload-icon { display: grid; place-items: center; width: 24px; height: 24px; flex: 0 0 auto; border-radius: 7px; color: var(--deep); background: var(--leaf); }
+      .source-upload-copy strong, .source-upload-copy small { display: block; }
+      .source-upload-copy strong { font-size: 12px; }
+      .source-upload-copy small { margin-top: 2px; color: #a8c8bd; font-size: 10px; line-height: 1.35; }
+      .source-compact .status { margin: 0; color: #a8c8bd; font-size: 11px; line-height: 1.35; }
+      .source-compact .batch-card { display: block; padding: 8px 0 0; border-top: 1px solid #37645f; }
+      .source-compact .batch-card strong { color: #e8f4ed; font-size: 11px; }
+      .source-compact .batch-card span { margin-top: 2px; color: #a8c8bd; font-size: 10px; }
+      .app-shell.rail-collapsed .brand { justify-content: center; margin-right: 0; margin-left: 0; }
+      .app-shell.rail-collapsed .brand > div:not(.brand-mark),
+      .app-shell.rail-collapsed .rail-label,
+      .app-shell.rail-collapsed .workspace-select,
+      .app-shell.rail-collapsed .workspace-create,
+      .app-shell.rail-collapsed .new-run-button,
+      .app-shell.rail-collapsed .rail-section,
+      .app-shell.rail-collapsed .rail-footer { display: none; }
 
       .main-stage { min-width: 0; min-height: 100vh; padding: 22px 28px 52px; }
       .main-inner { width: min(1540px, 100%); margin: 0 auto; }
@@ -92,6 +116,8 @@
       .header-copy h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.025em; line-height: 1.25; }
       .header-copy p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
       .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+      .layout-toggle { color: var(--muted); border-color: var(--line); background: transparent; }
+      .layout-toggle:hover:not(:disabled) { color: var(--teal); border-color: #9cbcb2; background: #eef5f1; }
       .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 14px; border: 1px solid transparent; border-radius: 10px; color: #fff; background: var(--teal); font-weight: 700; line-height: 1.2; transition: transform 160ms var(--ease-out), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, color 180ms ease; }
       .button:hover:not(:disabled) { background: #086660; box-shadow: 0 8px 18px rgba(25, 51, 48, .13); }
       .button.secondary { color: var(--deep); background: var(--mist); }
@@ -115,7 +141,9 @@
       .boundary-note .icon { flex: 0 0 auto; color: var(--amber); margin-top: 2px; }
       .boundary-note strong { color: #5e401f; }
 
-      .workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr) 352px; gap: 18px; align-items: start; }
+      .workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr) 352px; gap: 18px; align-items: start; transition: grid-template-columns 240ms var(--ease-out); }
+      .workspace-grid.insight-collapsed { grid-template-columns: minmax(0, 1fr); }
+      .workspace-grid.insight-collapsed .insight-column { display: none; }
       .conversation-column, .insight-column { min-width: 0; }
       .panel { min-width: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); box-shadow: var(--shadow-panel); }
       .panel + .panel { margin-top: 18px; }
@@ -279,6 +307,17 @@
       .model-picker { display: grid; grid-template-columns: auto minmax(170px, 1fr); gap: 7px; align-items: center; color: var(--muted); font-size: 13px; font-weight: 700; }
       .model-picker select { min-width: 190px; min-height: 42px; border: 1px solid var(--line-strong); border-radius: 9px; padding: 7px 10px; color: var(--ink); background: #fff; outline: none; font-size: 15px; font-weight: 600; }
       .model-unavailable { font-size: 14px; }
+      .model-config-actions { display: inline-flex; align-items: center; gap: 8px; }
+      .model-config-button { min-height: 38px; padding: 7px 11px; border: 1px solid var(--line-strong); border-radius: 9px; color: var(--teal); background: var(--panel); font-size: 14px; font-weight: 700; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease; }
+      .model-config-button:hover { background: var(--mist); border-color: var(--teal); }
+      .model-config-button:active { transform: scale(.98); }
+      .model-dialog { width: min(620px, calc(100vw - 30px)); }
+      .model-dialog .field small { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+      .model-vision-option { display: flex; align-items: flex-start; gap: 9px; margin-top: 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+      .custom-model-list { display: grid; gap: 8px; margin-top: 14px; }
+      .custom-model-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--mist); }
+      .custom-model-item strong, .custom-model-item span { display: block; }
+      .custom-model-item span { margin-top: 3px; color: var(--muted); font-size: 13px; }
       .process-panel { margin: 0 0 10px; border: 1px solid var(--line); border-radius: 12px; background: #f8fbf8; overflow: hidden; }
       .process-panel summary { min-height: 48px; padding: 10px 13px; }
       .process-panel summary::after { content: ""; width: 0; height: 0; margin-left: auto; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid currentColor; color: var(--muted); transition: transform 180ms ease; }
@@ -311,6 +350,7 @@
       }
       @media (max-width: 720px) {
         .app-shell { display: block; }
+        .app-shell.rail-collapsed .task-rail { display: none; }
         .task-rail { min-height: 0; padding: 16px 14px 13px; }
         .brand { margin-bottom: 18px; }
         .rail-section { margin-top: 17px; }
@@ -362,6 +402,8 @@
       <symbol id="icon-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
       <symbol id="icon-report" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
       <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="m7 15 3-4 3 2 5-6"/></symbol>
+      <symbol id="icon-sidebar-left" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M14 9l-3 3 3 3"/></symbol>
+      <symbol id="icon-sidebar-right" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16M10 9l3 3-3 3"/></symbol>
     </svg>
 
     <div class="app-shell">
@@ -385,6 +427,12 @@
         </div>
 
         <div class="rail-footer">
+          <div id="sourceCompact" class="source-compact">
+            <div class="source-compact-header"><span>数据来源</span><span>唯一批次</span></div>
+            <label class="source-upload" for="file"><input id="file" type="file" accept=".xlsx" /><span class="source-upload-icon"><svg class="icon small"><use href="#icon-upload"></use></svg></span><span class="source-upload-copy"><strong>配套数据已就绪</strong><small>系统自动解析 · 无需重新上传</small></span></label>
+            <div id="batchStatus" class="status">启动时自动加载比赛配套数据。</div>
+            <div id="batchSummary" style="display:none;"></div>
+          </div>
           <div class="simulation-note"><svg class="icon small"><use href="#icon-info"></use></svg><span>当前数据为命题方脱敏模拟数据，仅用于比赛开发测试。</span></div>
           <button id="adminEntry" class="admin-entry" type="button"><svg class="icon small"><use href="#icon-lock"></use></svg>团队管理员入口</button>
         </div>
@@ -395,6 +443,8 @@
           <header class="app-header">
             <div class="header-copy"><h2>企业评估工作台</h2><p>从数据到证据，再到一份可以复核的基础报告。</p></div>
             <div class="header-actions">
+              <button id="toggleTaskRail" class="button ghost layout-toggle" type="button" aria-pressed="false"><svg class="icon small"><use href="#icon-sidebar-left"></use></svg>收起任务栏</button>
+              <button id="toggleInsightPanel" class="button ghost layout-toggle" type="button" aria-pressed="false"><svg class="icon small"><use href="#icon-sidebar-right"></use></svg>收起侧栏</button>
               <button id="compareButton" class="button ghost" type="button" disabled><svg class="icon small"><use href="#icon-chart"></use></svg>比较已完成运行</button>
               <button id="reportLibraryButton" class="button secondary" type="button" disabled><svg class="icon small"><use href="#icon-report"></use></svg>查看报告输出</button>
             </div>
@@ -420,7 +470,7 @@
             <div class="workspace-grid">
               <div class="conversation-column">
                 <section id="messageCard" class="panel conversation-panel" style="display:none;">
-                  <div class="panel-header conversation-header"><div><h2>和这家企业对话</h2><p>围绕当前评估运行提问，助手只读取受控事实和工具结果。</p></div><div class="conversation-tools"><label class="model-picker" for="userModelSelect"><span>回答引擎</span><select id="userModelSelect" aria-label="选择回答引擎"><option value="">读取中……</option></select></label><span id="userModelUnavailable" class="model-unavailable muted" hidden>离线基础流程</span><span class="pill">当前运行</span></div></div>
+                  <div class="panel-header conversation-header"><div><h2>和这家企业对话</h2><p>围绕当前评估运行提问，助手只读取受控事实和工具结果。</p></div><div class="conversation-tools"><label class="model-picker" for="userModelSelect"><span>回答引擎</span><select id="userModelSelect" aria-label="选择回答引擎"><option value="">读取中……</option></select></label><span id="userModelUnavailable" class="model-unavailable muted" hidden>离线基础流程</span><button id="addModelButton" class="model-config-button" type="button">添加模型</button><span class="pill">当前运行</span></div></div>
                   <div class="panel-content">
                     <div class="conversation-welcome"><div class="assistant-mark"><svg class="icon"><use href="#icon-leaf"></use></svg></div><div><strong>评估助手已准备好</strong><span>可以问我企业详情、能耗变化、质量提示、目录候选或还需要补充哪些材料。</span></div></div>
                     <label class="dropzone" for="attachmentFile"><input id="attachmentFile" type="file" accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp,.xlsx" /><span class="drop-icon"><svg class="icon"><use href="#icon-upload"></use></svg></span><span><strong>补充 PDF、DOCX、图片或 XLSX</strong><span>保留证据位置；企业冲突会被阻断并提示人工复核。</span></span></label>
@@ -449,15 +499,6 @@
               </div>
 
               <aside class="insight-column" aria-label="当前企业信息">
-                <section id="batchCard" class="panel source-panel">
-                  <div class="panel-header"><div><h3>数据来源</h3><p>一次登记，多个企业运行可复用。</p></div><svg class="icon" style="color:var(--teal)"><use href="#icon-file"></use></svg></div>
-                  <div class="panel-content">
-                    <label class="dropzone" for="file"><input id="file" type="file" accept=".xlsx" /><span class="drop-icon"><svg class="icon"><use href="#icon-upload"></use></svg></span><span><strong>上传配套工作簿</strong><span>五张表校验 · 企业代号关联</span></span></label>
-                    <div id="batchStatus" class="status">尚未登记数据批次。</div>
-                    <div id="batchSummary" style="display:none;"></div>
-                  </div>
-                </section>
-
                 <section id="runView" class="panel insight-panel" style="display:none;">
                   <div class="panel-header"><div><h3 id="runHeading">企业侧写</h3><p id="runHint" class="muted"></p></div><span class="pill">事实摘要</span></div>
                   <div class="panel-content">
@@ -478,6 +519,7 @@
     </div>
 
     <dialog id="runDialog"><div class="dialog-body"><h2>新增企业评估</h2><p>从当前已登记的数据批次中选择一家企业。系统会创建新的评估运行，不会把事实写入现有运行。</p><div class="field"><label for="enterpriseSelect">评估企业</label><select id="enterpriseSelect"><option>请先上传工作簿</option></select></div><div class="field"><label for="runName">运行名称</label><input id="runName" value="企业评估" maxlength="120" /></div><div class="dialog-actions"><button id="cancelRun" class="button ghost" type="button">取消</button><button id="confirmRun" class="button" type="button">创建并切换</button></div></div></dialog>
+    <dialog id="modelConfigDialog" class="model-dialog"><div class="dialog-body"><h2>添加自定义模型</h2><p>填写一个兼容 OpenAI Chat Completions 接口的模型。API key只保存到本机后端，不会显示在模型列表、日志或报告中。</p><div class="field"><label for="customModelName">模型名称</label><input id="customModelName" autocomplete="off" maxlength="160" placeholder="例如 qwen3.7-plus 或 deepseek-chat" /><small>请求发送时使用这里的模型名称。</small></div><div class="field"><label for="customModelBaseUrl">接口地址</label><input id="customModelBaseUrl" type="url" autocomplete="url" maxlength="2000" placeholder="https://example.com/compatible-mode/v1" /><small>填写兼容接口的根地址；系统会自动补齐 /chat/completions。</small></div><div class="field"><label for="customModelApiKey">API key</label><input id="customModelApiKey" type="password" autocomplete="new-password" maxlength="4096" placeholder="粘贴本机使用的API key" /><small>提交后不会再次回显。请不要把 key 写进前端代码或提交到Git。</small></div><label class="model-vision-option"><input id="customModelVision" type="checkbox" /><span>该模型支持视觉理解，可直接解析图片和扫描PDF；不勾选时将尝试切换到已配置的视觉模型。</span></label><div id="modelConfigStatus" class="status" aria-live="polite"></div><div id="customModelList" class="custom-model-list"></div><div class="dialog-actions"><button id="cancelModelConfig" class="button ghost" type="button">取消</button><button id="saveModelConfig" class="button" type="button">保存并使用</button></div></div></dialog>
     <dialog id="compareDialog"><div class="dialog-body"><h2>比较已完成运行</h2><p>至少选择两个已完成或已归档运行。系统会显示报告期、批次、规则版本和质量门差异，不计算排名。</p><div id="compareChoices" class="check-list"></div><div id="compareResult" class="compare-result"></div><div class="dialog-actions"><button id="cancelCompare" class="button ghost" type="button">关闭</button><button id="confirmCompare" class="button" type="button">生成对比视图</button></div></div></dialog>
     <dialog id="adminDialog" class="admin-dialog"><div class="dialog-body"><div class="admin-login" id="adminLogin"><h2>团队管理员入口</h2><p>这里仅显示模型、工具和审计诊断。普通用户界面不会展示这些内部信息。</p><div class="field"><label for="adminPassword">管理员口令</label><input id="adminPassword" type="password" autocomplete="current-password" placeholder="输入受控环境配置的管理员口令" /></div><div id="adminLoginStatus" class="status" aria-live="polite"></div><div class="dialog-actions"><button id="closeAdminLogin" class="button ghost" type="button">取消</button><button id="adminLoginButton" class="button" type="button">验证并进入</button></div></div><div class="admin-panel" id="adminPanel" hidden><h2>运行诊断</h2><p>管理员视图。规则、质量、评分和证据事实仍由独立回放模块执行。</p><div class="admin-grid"><div class="admin-block"><h3>模型能力</h3><div class="admin-controls"><select id="modelSelect" aria-label="会话模型"></select><span id="modelUnavailable" class="muted">未配置外部模型</span></div><div id="modelStatus" class="admin-status">模型能力读取中……</div></div><div class="admin-block"><h3>当前运行</h3><p id="adminRunSummary" class="muted">尚未选择评估运行。</p><div class="admin-controls"><button id="stopConversation" class="button ghost small" type="button"><svg class="icon small"><use href="#icon-stop"></use></svg>停止</button><button id="retryConversation" class="button ghost small" type="button"><svg class="icon small"><use href="#icon-refresh"></use></svg>重试</button></div></div></div><div class="admin-block" style="margin-top:12px"><h3>审计事件（当前运行）</h3><div id="adminEvents" class="admin-events">选择一个评估运行后加载。</div></div><div class="dialog-actions"><button id="adminLogout" class="button ghost" type="button">退出管理员视图</button><button id="closeAdminPanel" class="button" type="button">关闭</button></div></div></div></dialog>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -494,15 +536,88 @@
       function toast(message) { $("toast").textContent = message; $("toast").classList.add("show"); window.clearTimeout(window.__toast); window.__toast = window.setTimeout(() => $("toast").classList.remove("show"), 3600); }
       async function api(url, options = {}) { const response = await fetch(url, options); const body = await response.json(); if (!response.ok) throw new Error(typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail || "请求失败")); return body; }
 
-      async function boot() { try { await loadModelCapabilities(); const body = await api("/api/v1/workspaces"); renderWorkspaces(body.workspaces || []); if (body.workspaces?.length) await selectWorkspace(body.workspaces[0].workspace_id); else showStart(); } catch (error) { toast(`工作空间读取失败：${error.message}`); showStart(); } }
-      function showStart() { $("startState").style.display = "grid"; $("workspaceView").style.display = "none"; $("contextTitle").textContent = "尚未选择评估运行"; $("contextSubtitle").textContent = "先创建工作空间，再上传工作簿并选择一家企业。"; $("contextMeta").innerHTML = '<span class="pill amber">等待开始</span>'; }
+      async function loadDefaultSourceBatch() { try { state.sourceBatch = await api("/api/v1/source-batches/default"); renderSourceBatch(); } catch (error) { state.sourceBatch = null; $("batchStatus").textContent = `默认配套数据读取失败：${error.message}`; throw error; } }
+      async function boot() { try { await loadModelCapabilities(); await loadDefaultSourceBatch(); const body = await api("/api/v1/workspaces"); renderWorkspaces(body.workspaces || []); if (body.workspaces?.length) await selectWorkspace(body.workspaces[0].workspace_id); else showStart(); } catch (error) { toast(`工作空间读取失败：${error.message}`); showStart(); } }
+      function showStart() { $("startState").style.display = "grid"; $("workspaceView").style.display = "none"; $("contextTitle").textContent = "尚未选择评估运行"; $("contextSubtitle").textContent = state.sourceBatch ? "配套数据已就绪，先创建工作空间，再选择一家企业开始评估。" : "先创建工作空间，再准备配套数据并选择一家企业。"; $("contextMeta").innerHTML = '<span class="pill amber">等待开始</span>'; }
       function renderWorkspaces(workspaces) { const select = $("workspaceSelect"); select.innerHTML = workspaces.length ? workspaces.map(item => `<option value="${esc(item.workspace_id)}">${esc(item.name)}</option>`).join("") : '<option value="">尚未创建工作空间</option>'; if (state.workspaceId) select.value = state.workspaceId; }
       async function createWorkspace() { const name = $("workspaceName").value.trim() || "转型金融评估工作台"; try { const workspace = await api("/api/v1/workspaces", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) }); $("workspaceName").value = ""; state.workspaceId = workspace.workspace_id; await loadWorkspaceList(); await selectWorkspace(workspace.workspace_id); toast("工作空间已创建"); } catch (error) { toast(`创建失败：${error.message}`); } }
       async function loadWorkspaceList() { const body = await api("/api/v1/workspaces"); renderWorkspaces(body.workspaces || []); }
-      async function selectWorkspace(workspaceId) { if (!workspaceId) return showStart(); state.workspaceId = workspaceId; $("workspaceSelect").value = workspaceId; const workspace = await api(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}`); state.workspaceName = workspace.name; $("startState").style.display = "none"; $("workspaceView").style.display = "block"; const body = await api(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/runs`); state.runs = body.runs || []; const comparisons = await api(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/comparison-views`); state.comparison = comparisons.comparisons?.[0] || null; renderRuns(); renderComparison(); if (state.runs.length) await switchRun(state.runs.find(run => run.assessment_run_id === workspace.last_active_run_id)?.assessment_run_id || state.runs[0].assessment_run_id); else { state.currentRunId = null; state.currentRun = null; state.analysis = null; renderNoRun(); } }
-      function renderRuns() { $("runCount").textContent = state.runs.length; $("runList").innerHTML = state.runs.length ? state.runs.map(run => `<button class="run-item ${run.assessment_run_id === state.currentRunId ? "active" : ""}" data-run-id="${esc(run.assessment_run_id)}" type="button"><strong>${esc(run.enterprise_code)} · ${esc(run.run_name)}</strong><span>${esc(statusLabel(run.status))}</span></button>`).join("") : '<p class="muted">还没有评估运行。上传批次后点击“新增企业评估”。</p>'; document.querySelectorAll("[data-run-id]").forEach(button => button.addEventListener("click", () => switchRun(button.dataset.runId))); }
-      function renderNoRun() { $("contextTitle").textContent = "等待第一家企业"; $("contextSubtitle").textContent = "上传工作簿后，可以在同一批次中继续创建多个企业运行。"; $("contextMeta").innerHTML = '<span class="pill amber">未绑定企业</span>'; $("runView").style.display = "none"; $("messageCard").style.display = "none"; $("reportCard").style.display = "none"; $("compareCard").style.display = "none"; $("processPanel").hidden = true; $("reportLibraryButton").disabled = true; $("compareButton").disabled = true; updateAdminSummary(); }
-      async function switchRun(runId) { const run = state.runs.find(item => item.assessment_run_id === runId); if (!run) return; state.currentRunId = runId; state.currentRun = run; state.processEvents = []; state.processing = false; renderRuns(); try { state.sourceBatch = await api(`/api/v1/source-batches/${encodeURIComponent(run.source_batch_id)}`); renderSourceBatch(); const detail = await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/company-detail`); state.analysis = detail.analysis; state.messages = (await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/messages`)).messages || []; state.reports = (await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/reports`)).reports || []; state.attachments = (await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/attachments`)).attachments || []; renderCurrent(); if (state.adminUnlocked) loadAdminEvents(); } catch (error) { toast(`运行切换失败：${error.message}`); } }
+      async function selectWorkspace(workspaceId) {
+        if (!workspaceId) return showStart();
+        const previousWorkspaceId = state.workspaceId;
+        try {
+          state.workspaceId = workspaceId;
+          $("workspaceSelect").value = workspaceId;
+          const workspace = await api(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}`);
+          state.workspaceName = workspace.name;
+          if (!state.sourceBatch) await loadDefaultSourceBatch();
+          $("startState").style.display = "none";
+          $("workspaceView").style.display = "block";
+          const body = await api(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/runs`);
+          state.runs = body.runs || [];
+          const comparisons = await api(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/comparison-views`);
+          state.comparison = comparisons.comparisons?.[0] || null;
+          renderRuns();
+          renderComparison();
+          if (state.runs.length) {
+            await switchRun(state.runs.find(run => run.assessment_run_id === workspace.last_active_run_id)?.assessment_run_id || state.runs[0].assessment_run_id);
+          } else {
+            state.currentRunId = null;
+            state.currentRun = null;
+            state.analysis = null;
+            renderNoRun();
+          }
+        } catch (error) {
+          state.workspaceId = previousWorkspaceId;
+          $("workspaceSelect").value = previousWorkspaceId || "";
+          toast(`工作空间切换失败：${error.message}`);
+        }
+      }
+      function renderRuns() { $("runCount").textContent = state.runs.length; $("runList").innerHTML = state.runs.length ? state.runs.map(run => `<button class="run-item ${run.assessment_run_id === state.currentRunId ? "active" : ""}" data-run-id="${esc(run.assessment_run_id)}" type="button"><strong>${esc(run.enterprise_code)} · ${esc(run.run_name)}</strong><span>${esc(statusLabel(run.status))}</span></button>`).join("") : '<p class="muted">还没有评估运行。配套数据已自动准备好，点击“新增企业评估”即可开始。</p>'; document.querySelectorAll("[data-run-id]").forEach(button => button.addEventListener("click", () => switchRun(button.dataset.runId))); }
+      function renderNoRun() { $("contextTitle").textContent = "等待第一家企业"; $("contextSubtitle").textContent = state.sourceBatch ? "配套数据已自动准备好，点击“新增企业评估”选择一家企业。" : "准备配套数据后，可以选择一家企业开始评估。"; $("contextMeta").innerHTML = '<span class="pill amber">未绑定企业</span>'; $("runView").style.display = "none"; $("messageCard").style.display = "none"; $("reportCard").style.display = "none"; $("compareCard").style.display = "none"; $("processPanel").hidden = true; $("reportLibraryButton").disabled = true; $("compareButton").disabled = true; updateAdminSummary(); }
+      async function switchRun(runId) {
+        const run = state.runs.find(item => item.assessment_run_id === runId);
+        if (!run) return;
+        const previous = {
+          currentRunId: state.currentRunId,
+          currentRun: state.currentRun,
+          sourceBatch: state.sourceBatch,
+          analysis: state.analysis,
+          messages: state.messages,
+          reports: state.reports,
+          attachments: state.attachments,
+        };
+        state.processEvents = [];
+        state.processing = false;
+        try {
+          const sourceBatch = await api(`/api/v1/source-batches/${encodeURIComponent(run.source_batch_id)}`);
+          const detail = await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/company-detail`);
+          const messages = (await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/messages`)).messages || [];
+          const reports = (await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/reports`)).reports || [];
+          const attachments = (await api(`/api/v1/assessment-runs/${encodeURIComponent(runId)}/attachments`)).attachments || [];
+          state.currentRunId = runId;
+          state.currentRun = run;
+          state.sourceBatch = sourceBatch;
+          state.analysis = detail.analysis;
+          state.messages = messages;
+          state.reports = reports;
+          state.attachments = attachments;
+          renderRuns();
+          renderSourceBatch();
+          renderCurrent();
+          if (state.adminUnlocked) loadAdminEvents();
+        } catch (error) {
+          state.currentRunId = previous.currentRunId;
+          state.currentRun = previous.currentRun;
+          state.sourceBatch = previous.sourceBatch;
+          state.analysis = previous.analysis;
+          state.messages = previous.messages;
+          state.reports = previous.reports;
+          state.attachments = previous.attachments;
+          renderRuns();
+          toast(`运行切换失败：${error.message}`);
+        }
+      }
 
       function renderCurrent() {
         const run = state.currentRun; const analysis = state.analysis || {}; const basic = analysis.input_data?.basic_info || {}; const supp = analysis.input_data?.supplement_info || {};
@@ -531,18 +646,113 @@
       function renderAttachments() { $("attachments").innerHTML = state.attachments.length ? state.attachments.map(item => { const parsed = item.parse_result || {}; const issues = parsed.issues || []; const evidence = parsed.evidence || []; const routing = parsed.metadata?.model_routing; const routingText = routing?.switched ? `视觉解析已完成，后续会话回到 ${routing.return_to_model_id}。` : routing?.vision_model_id ? `视觉解析使用 ${routing.vision_model_id}。` : ""; return `<div class="report-item"><div><strong>${esc(item.source_filename)} · ${esc(statusLabel(item.parse_status))}</strong><span>${esc(item.file_type.toUpperCase())} · 证据 ${esc(evidence.length)} 条</span><span>${esc(routingText || issues[0]?.message || (item.merge_allowed ? "可作为当前运行补充证据候选" : "需要人工复核"))}</span></div><span class="tag ${item.parse_status === "passed" ? "" : item.parse_status === "blocked_conflict" ? "error" : "warning"}">${esc(statusLabel(item.parse_status))}</span></div>`; }).join("") : ""; }
       function renderReports() { $("reports").innerHTML = state.reports.length ? state.reports.map(item => `<div class="report-item"><div><strong>${esc(item.report_type)} · ${esc(item.version)}</strong><span>报告期 ${esc(item.report_period)} · 批次 ${esc(item.source_batch_id)} · 规则 ${esc(item.rule_version)}</span><span>已按当前运行独立保存，可恢复预览、下载或导出</span><span class="admin-only">${esc(item.relative_path)} · ${esc(item.sha256 || "暂无哈希")}</span></div><div class="report-actions"><button class="button ghost small preview-report" data-report-id="${esc(item.report_artifact_id)}" type="button">预览</button><a class="button ghost small" href="/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports/${encodeURIComponent(item.report_artifact_id)}/download">下载</a><button class="button ghost small export-report" data-report-id="${esc(item.report_artifact_id)}" type="button">导出</button><button class="button ghost small open-report-directory" data-report-id="${esc(item.report_artifact_id)}" type="button">打开目录</button></div></div>`).join("") : '<p class="muted" style="padding:0 0 16px">当前运行还没有报告。生成后会显示在这里。</p>'; document.querySelectorAll(".preview-report").forEach(button => button.addEventListener("click", () => previewReport(button.dataset.reportId))); document.querySelectorAll(".export-report").forEach(button => button.addEventListener("click", () => exportReport(button.dataset.reportId))); document.querySelectorAll(".open-report-directory").forEach(button => button.addEventListener("click", () => openReportDirectory(button.dataset.reportId))); }
       function renderBatch() { const summary = state.batchSummary; const quality = summary.quality_overview || {}; const derived = quality.enterprise_derived || {}; $("batchSummary").style.display = "block"; $("batchSummary").innerHTML = `<div class="batch-card"><div><strong>${esc(summary.source_filename)} · ${esc(summary.status)}</strong><span>${esc((summary.validation?.company_codes || []).length)} 家企业 · 企业级派生问题 ${esc(derived.issue_count || 0)} 条</span></div><span class="batch-hash admin-only">${esc(summary.sha256)}</span></div>`; }
-      function renderSourceBatch() { if (!state.sourceBatch) return; $("batchSummary").style.display = "block"; $("batchSummary").innerHTML = `<div class="batch-card"><div><strong>${esc(state.sourceBatch.source_filename)} · ${esc(statusLabel(state.sourceBatch.validation_status))}</strong><span>${esc((state.sourceBatch.available_company_codes || []).length)} 家企业 · 批次可复用</span></div><span class="batch-hash admin-only">${esc(state.sourceBatch.sha256)}</span></div>`; $("batchStatus").textContent = `当前运行已恢复数据批次，可复用创建其他企业运行。`; }
+      function renderSourceBatch() { if (!state.sourceBatch) return; $("batchSummary").style.display = "block"; $("batchSummary").innerHTML = `<div class="batch-card"><div><strong>${esc(state.sourceBatch.source_filename)} · ${esc(statusLabel(state.sourceBatch.validation_status))}</strong><span>${esc((state.sourceBatch.available_company_codes || []).length)} 家企业 · 批次可复用</span></div><span class="batch-hash admin-only">${esc(state.sourceBatch.sha256)}</span></div>`; $("batchStatus").textContent = `配套数据已自动加载，可直接创建企业运行；无需重新上传。`; }
 
-      function showRunDialog() { if (!state.sourceBatch) return toast("请先上传并登记一个可用工作簿"); $("enterpriseSelect").innerHTML = (state.sourceBatch.available_company_codes || []).map(code => `<option value="${esc(code)}">${esc(code)}</option>`).join(""); $("runName").value = "企业评估"; $("runDialog").showModal(); }
-      async function createRun() { const code = $("enterpriseSelect").value; if (!code || !state.workspaceId || !state.sourceBatch) return; try { const run = await api(`/api/v1/workspaces/${encodeURIComponent(state.workspaceId)}/runs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enterprise_code: code, source_batch_id: state.sourceBatch.source_batch_id, run_name: $("runName").value.trim() || `${code}评估`, rule_version: "m1-local-v0.1", model_config: { mode: "offline", provider: "none" }, basic_info_index: { "企业代号": code, "索引来源": "基本信息" } }) }); $("runDialog").close(); await refreshRuns(); await switchRun(run.assessment_run_id); toast(`已切换到 ${code} 的新评估运行`); } catch (error) { toast(`创建运行失败：${error.message}`); } }
+      function showRunDialog() { if (!state.sourceBatch) return toast("默认配套数据尚未准备好，请刷新后重试"); $("enterpriseSelect").innerHTML = (state.sourceBatch.available_company_codes || []).map(code => `<option value="${esc(code)}">${esc(code)}</option>`).join(""); $("runName").value = "企业评估"; $("runDialog").showModal(); }
+      async function createRun() { const code = $("enterpriseSelect").value; if (!code || !state.workspaceId || !state.sourceBatch) return; const selectedModel = $("userModelSelect").value || null; try { const run = await api(`/api/v1/workspaces/${encodeURIComponent(state.workspaceId)}/runs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enterprise_code: code, source_batch_id: state.sourceBatch.source_batch_id, run_name: $("runName").value.trim() || `${code}评估`, rule_version: "m1-local-v0.1", model_config: selectedModel ? { mode: "external", model_id: selectedModel } : { mode: "offline", provider: "none" }, basic_info_index: { "企业代号": code, "索引来源": "基本信息" } }) }); $("runDialog").close(); await refreshRuns(); await switchRun(run.assessment_run_id); toast(`已切换到 ${code} 的新评估运行`); } catch (error) { toast(`创建运行失败：${error.message}`); } }
       async function refreshRuns() { const body = await api(`/api/v1/workspaces/${encodeURIComponent(state.workspaceId)}/runs`); state.runs = body.runs || []; renderRuns(); }
       async function uploadWorkbook() { const file = $("file").files[0]; if (!file) return toast("请选择.xlsx工作簿"); if (!state.workspaceId) return toast("请先创建工作空间"); $("batchStatus").textContent = "正在上传、校验五张表并登记批次……"; try { const summary = await api("/api/v1/documents", { method: "POST", body: (() => { const form = new FormData(); form.append("file", file); return form; })() }); state.batchSummary = summary; if (summary.status === "failed") throw new Error("工作簿校验失败，请先修复批次问题"); state.sourceBatch = await api("/api/v1/source-batches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ batch_id: summary.batch_id }) }); renderBatch(); $("batchStatus").textContent = `批次已登记，可复用创建其他企业运行。`; showRunDialog(); } catch (error) { $("batchStatus").textContent = `批次处理失败：${error.message}`; toast(error.message); } }
       async function uploadRunAttachment() { const file = $("attachmentFile").files[0]; if (!file) return toast("请选择PDF、DOCX、图片或当前批次XLSX"); if (!state.currentRunId) return toast("请先创建并切换到一个评估运行"); $("attachmentStatus").textContent = "正在保存原件并按模型视觉能力路由解析……"; try { const form = new FormData(); form.append("file", file); const selectedModel = $("userModelSelect").value || $("modelSelect").value || ""; if (selectedModel) form.append("session_model_id", selectedModel); const result = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/attachments`, { method: "POST", body: form }); state.attachments = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/attachments`)).attachments || []; renderAttachments(); const parse = result.parse || {}; const routing = result.model_routing; const routingText = routing?.switched ? `视觉解析使用 ${routing.vision_model_id}，完成后回到 ${routing.return_to_model_id}。` : routing?.vision_model_id ? `视觉解析使用 ${routing.vision_model_id}。` : ""; $("attachmentStatus").textContent = `${file.name}：${statusLabel(parse.status)}。${routingText}${parse.merge_allowed ? "可作为当前运行补充证据候选。" : "未合并为当前运行事实，需要人工复核。"}`; $("attachmentFile").value = ""; toast($("attachmentStatus").textContent); } catch (error) { $("attachmentStatus").textContent = `附件处理失败：${error.message}`; toast(error.message); } }
 
-      async function loadModelCapabilities() { const populate = (selector, options) => { $(selector).innerHTML = options.length ? options.map(item => `<option value="${esc(item.model_id)}">${esc(item.display_name)}</option>`).join("") : '<option value="">离线基础流程（未配置外部模型）</option>'; }; try { const body = await api("/api/v1/model-providers"); state.models = body.models || []; populate("modelSelect", state.models); populate("userModelSelect", state.models); if (body.default_model_id && state.models.some(item => item.model_id === body.default_model_id)) { $("modelSelect").value = body.default_model_id; $("userModelSelect").value = body.default_model_id; } $("modelSelect").style.display = state.models.length ? "block" : "none"; $("modelUnavailable").style.display = state.models.length ? "none" : "inline"; $("userModelSelect").hidden = false; $("userModelUnavailable").hidden = true; $("modelStatus").textContent = state.models.length ? "外部模型已配置。规则、权重、阈值和评分不进入模型。" : "未配置外部模型；消息将使用离线受控流程。"; } catch (error) { state.models = []; populate("modelSelect", []); populate("userModelSelect", []); $("modelSelect").style.display = "none"; $("modelUnavailable").style.display = "inline"; $("userModelSelect").hidden = false; $("userModelUnavailable").hidden = true; $("modelStatus").textContent = "模型能力读取失败，已保留离线流程。"; } }
+      async function loadModelCapabilities() {
+        const populate = (selector, options) => {
+          $(selector).innerHTML = options.length
+            ? options.map(item => `<option value="${esc(item.model_id)}">${esc(item.display_name)}${item.custom ? " · 自定义" : ""}</option>`).join("")
+            : '<option value="">离线基础流程（未配置外部模型）</option>';
+        };
+        try {
+          const body = await api("/api/v1/model-providers");
+          state.models = body.models || [];
+          populate("modelSelect", state.models);
+          populate("userModelSelect", state.models);
+          if (body.default_model_id && state.models.some(item => item.model_id === body.default_model_id)) {
+            $("modelSelect").value = body.default_model_id;
+            $("userModelSelect").value = body.default_model_id;
+          }
+          $("modelSelect").style.display = state.models.length ? "block" : "none";
+          $("modelUnavailable").style.display = state.models.length ? "none" : "inline";
+          $("userModelSelect").hidden = false;
+          $("userModelUnavailable").hidden = true;
+          $("modelStatus").textContent = state.models.length ? "模型已配置。规则、权重、阈值和评分不进入模型。" : "未配置外部模型；消息将使用离线受控流程。";
+        } catch (error) {
+          state.models = [];
+          populate("modelSelect", []);
+          populate("userModelSelect", []);
+          $("modelSelect").style.display = "none";
+          $("modelUnavailable").style.display = "inline";
+          $("userModelSelect").hidden = false;
+          $("userModelUnavailable").hidden = true;
+          $("modelStatus").textContent = "模型能力读取失败，已保留离线流程。";
+        }
+      }
+      async function loadCustomModelList() {
+        try {
+          const body = await api("/api/v1/model-configs");
+          const models = body.models || [];
+          const rows = models.map(item => `<div class="custom-model-item"><div><strong>${esc(item.display_name)}</strong><span>${esc(item.model_name)} · ${esc(item.base_url)} · ${item.supports_vision ? "支持视觉" : "文本模型"}</span></div><button class="button ghost small delete-custom-model" type="button" data-model-id="${esc(item.model_config_id)}">删除</button></div>`).join("");
+          $("customModelList").innerHTML = models.length
+            ? `<p class="muted">已保存的自定义模型</p>${rows}`
+            : '<p class="muted">还没有保存自定义模型。</p>';
+          document.querySelectorAll(".delete-custom-model").forEach(button => button.addEventListener("click", () => deleteCustomModel(button.dataset.modelId)));
+        } catch (error) {
+          $("customModelList").innerHTML = `<p class="muted">自定义模型列表读取失败：${esc(error.message)}</p>`;
+        }
+      }
+      function openModelConfig() {
+        $("customModelName").value = "";
+        $("customModelBaseUrl").value = "";
+        $("customModelApiKey").value = "";
+        $("customModelVision").checked = false;
+        $("modelConfigStatus").textContent = "";
+        loadCustomModelList();
+        $("modelConfigDialog").showModal();
+      }
+      async function saveModelConfig() {
+        const modelName = $("customModelName").value.trim();
+        const baseUrl = $("customModelBaseUrl").value.trim();
+        const apiKey = $("customModelApiKey").value;
+        if (!modelName || !baseUrl || !apiKey) {
+          $("modelConfigStatus").textContent = "模型名称、接口地址和 API key 都不能为空。";
+          return;
+        }
+        const button = $("saveModelConfig");
+        button.disabled = true;
+        $("modelConfigStatus").textContent = "正在保存到本机后端……";
+        try {
+          const result = await api("/api/v1/model-configs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model_name: modelName, display_name: modelName, base_url: baseUrl, api_key: apiKey, supports_vision: $("customModelVision").checked }),
+          });
+          await loadModelCapabilities();
+          const savedId = result.model?.model_id;
+          if (savedId) {
+            $("userModelSelect").value = savedId;
+            $("modelSelect").value = savedId;
+          }
+          $("customModelApiKey").value = "";
+          $("modelConfigDialog").close();
+          toast("自定义模型已保存并选为当前回答引擎");
+        } catch (error) {
+          $("modelConfigStatus").textContent = `保存失败：${error.message}`;
+        } finally {
+          button.disabled = false;
+        }
+      }
+      async function deleteCustomModel(modelId) {
+        if (!modelId || !window.confirm("删除这个自定义模型配置？已生成的历史消息不会被删除。")) return;
+        try {
+          await api(`/api/v1/model-configs/${encodeURIComponent(modelId)}`, { method: "DELETE" });
+          await loadCustomModelList();
+          await loadModelCapabilities();
+          toast("自定义模型配置已删除");
+        } catch (error) {
+          toast(`删除失败：${error.message}`);
+        }
+      }
       async function sendMessage() { if (!state.currentRunId) return; const content = $("messageInput").value.trim(); if (!content) return; const modelId = $("userModelSelect").value || $("modelSelect").value || null; const button = $("sendMessage"); button.disabled = true; button.innerHTML = `${icon("refresh")}处理中`; beginProcessSummary(); try { await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/conversation/turn`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content, model_id: modelId, mode: modelId ? "auto" : "offline" }) }); $("messageInput").value = ""; state.messages = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/messages`)).messages || []; renderMessages(); state.processing = false; await loadProcessSummary({ collapse: true }); if (state.adminUnlocked) loadAdminEvents(); } catch (error) { state.processing = false; showProcessFailure("处理未完成，请查看提示并重试"); toast(`会话处理失败：${error.message}`); } finally { button.disabled = false; button.innerHTML = `${icon("send")}发送`; } }
       async function stopConversation() { if (!state.currentRunId) return; try { await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/conversation/stop`, { method: "POST" }); toast("已请求停止当前会话"); if (state.adminUnlocked) loadAdminEvents(); } catch (error) { toast(`停止失败：${error.message}`); } }
-      async function retryConversation() { if (!state.currentRunId) return; try { await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/conversation/retry`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model_id: $("modelSelect").value || null }) }); state.messages = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/messages`)).messages || []; renderMessages(); if (state.adminUnlocked) loadAdminEvents(); } catch (error) { toast(`重试失败：${error.message}`); } }
+      async function retryConversation() { if (!state.currentRunId) return; try { await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/conversation/retry`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model_id: $("userModelSelect").value || $("modelSelect").value || null }) }); state.messages = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/messages`)).messages || []; renderMessages(); if (state.adminUnlocked) loadAdminEvents(); } catch (error) { toast(`重试失败：${error.message}`); } }
       async function generateReport() { if (!state.currentRunId) return; $("generateReport").disabled = true; try { const result = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports/basic`, { method: "POST" }); state.reports = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports`)).reports || []; const index = state.runs.findIndex(item => item.assessment_run_id === state.currentRunId); if (index >= 0) state.runs[index] = result.assessment_run; state.currentRun = result.assessment_run; renderRuns(); renderCurrent(); $("reportPreview").textContent = result.markdown; $("reportPreview").style.display = "block"; toast("基础报告已保存到当前运行"); } catch (error) { toast(`报告生成失败：${error.message}`); } finally { $("generateReport").disabled = false; } }
       async function previewReport(reportId) { try { const result = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports/${encodeURIComponent(reportId)}`); $("reportPreview").textContent = result.markdown; $("reportPreview").style.display = "block"; } catch (error) { toast(`报告读取失败：${error.message}`); } }
       async function exportReport(reportId) { const targetDirectory = window.prompt("请输入导出目录的本机路径（桌面版将提供目录选择器）", ""); if (!targetDirectory) return; try { const result = await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports/${encodeURIComponent(reportId)}/export`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target_directory: targetDirectory }) }); state.reports = (await api(`/api/v1/assessment-runs/${encodeURIComponent(state.currentRunId)}/reports`)).reports || []; renderReports(); toast(`报告已导出：${result.exported_file}`); } catch (error) { toast(`报告导出失败：${error.message}`); } }
@@ -559,7 +769,42 @@
       async function loginAdmin() { const password = $("adminPassword").value; if (!password) { $("adminLoginStatus").textContent = "请输入管理员口令。"; return; } $("adminLoginButton").disabled = true; $("adminLoginStatus").textContent = "正在验证……"; try { const session = await api("/api/v1/admin/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }); state.adminToken = session.access_token; state.adminUnlocked = true; document.body.classList.add("admin-unlocked"); $("adminLogin").hidden = true; $("adminPanel").hidden = false; $("adminPassword").value = ""; updateAdminSummary(); await loadAdminEvents(); toast("管理员诊断视图已开启"); } catch (error) { $("adminLoginStatus").textContent = error.message; } finally { $("adminLoginButton").disabled = false; } }
       function logoutAdmin() { state.adminUnlocked = false; state.adminToken = null; document.body.classList.remove("admin-unlocked"); $("adminPanel").hidden = true; $("adminLogin").hidden = false; $("adminLoginStatus").textContent = ""; $("adminDialog").close(); toast("已退出管理员视图"); }
 
-      $("createWorkspace").addEventListener("click", createWorkspace); $("startWorkspace").addEventListener("click", () => { $("workspaceName").focus(); $("workspaceName").scrollIntoView({ behavior: "smooth", block: "center" }); }); $("workspaceName").addEventListener("keydown", event => { if (event.key === "Enter") createWorkspace(); }); $("workspaceSelect").addEventListener("change", event => selectWorkspace(event.target.value)); $("newRun").addEventListener("click", showRunDialog); $("cancelRun").addEventListener("click", () => $("runDialog").close()); $("confirmRun").addEventListener("click", createRun); $("file").addEventListener("change", uploadWorkbook); $("attachmentFile").addEventListener("change", uploadRunAttachment); $("sendMessage").addEventListener("click", sendMessage); $("messageInput").addEventListener("keydown", event => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") sendMessage(); }); $("stopConversation").addEventListener("click", stopConversation); $("retryConversation").addEventListener("click", retryConversation); $("generateReport").addEventListener("click", generateReport); $("completeRun").addEventListener("click", completeRun); $("compareButton").addEventListener("click", showCompareDialog); $("reportLibraryButton").addEventListener("click", () => $("reportCard").scrollIntoView({ behavior: "smooth", block: "start" })); $("cancelCompare").addEventListener("click", () => $("compareDialog").close()); $("confirmCompare").addEventListener("click", createComparison); $("adminEntry").addEventListener("click", openAdmin); $("closeAdminLogin").addEventListener("click", () => $("adminDialog").close()); $("adminLoginButton").addEventListener("click", loginAdmin); $("adminLogout").addEventListener("click", logoutAdmin); $("closeAdminPanel").addEventListener("click", () => $("adminDialog").close()); $("adminPassword").addEventListener("keydown", event => { if (event.key === "Enter") loginAdmin(); });
+      function updateLayoutControls() {
+        const shell = document.querySelector(".app-shell");
+        const workspaceGrid = document.querySelector(".workspace-grid");
+        const railCollapsed = shell.classList.contains("rail-collapsed");
+        const insightCollapsed = workspaceGrid?.classList.contains("insight-collapsed");
+        $("toggleTaskRail").innerHTML = `${icon("sidebar-left")} ${railCollapsed ? "展开任务栏" : "收起任务栏"}`;
+        $("toggleTaskRail").setAttribute("aria-pressed", String(railCollapsed));
+        $("toggleTaskRail").setAttribute("title", railCollapsed ? "展开左侧工作空间与评估任务" : "收起左侧工作空间与评估任务");
+        $("toggleInsightPanel").innerHTML = `${icon("sidebar-right")} ${insightCollapsed ? "展开侧栏" : "收起侧栏"}`;
+        $("toggleInsightPanel").setAttribute("aria-pressed", String(insightCollapsed));
+        $("toggleInsightPanel").setAttribute("title", insightCollapsed ? "展开当前企业信息侧栏" : "收起当前企业信息侧栏");
+      }
+      function applySavedLayout() {
+        const shell = document.querySelector(".app-shell");
+        const workspaceGrid = document.querySelector(".workspace-grid");
+        try {
+          shell.classList.toggle("rail-collapsed", window.localStorage.getItem("transition-finance.rail-collapsed") === "1");
+          workspaceGrid.classList.toggle("insight-collapsed", window.localStorage.getItem("transition-finance.insight-collapsed") === "1");
+        } catch (error) { /* 浏览器禁用本地存储时仍保持默认展开 */ }
+        updateLayoutControls();
+      }
+      function toggleTaskRail() {
+        const shell = document.querySelector(".app-shell");
+        const collapsed = shell.classList.toggle("rail-collapsed");
+        try { window.localStorage.setItem("transition-finance.rail-collapsed", collapsed ? "1" : "0"); } catch (error) { /* ignore */ }
+        updateLayoutControls();
+      }
+      function toggleInsightPanel() {
+        const workspaceGrid = document.querySelector(".workspace-grid");
+        const collapsed = workspaceGrid.classList.toggle("insight-collapsed");
+        try { window.localStorage.setItem("transition-finance.insight-collapsed", collapsed ? "1" : "0"); } catch (error) { /* ignore */ }
+        updateLayoutControls();
+      }
+
+      $("createWorkspace").addEventListener("click", createWorkspace); $("startWorkspace").addEventListener("click", () => { $("workspaceName").focus(); $("workspaceName").scrollIntoView({ behavior: "smooth", block: "center" }); }); $("workspaceName").addEventListener("keydown", event => { if (event.key === "Enter") createWorkspace(); }); $("workspaceSelect").addEventListener("change", event => selectWorkspace(event.target.value)); $("newRun").addEventListener("click", showRunDialog); $("cancelRun").addEventListener("click", () => $("runDialog").close()); $("confirmRun").addEventListener("click", createRun); $("file").addEventListener("change", uploadWorkbook); $("attachmentFile").addEventListener("change", uploadRunAttachment); $("sendMessage").addEventListener("click", sendMessage); $("messageInput").addEventListener("keydown", event => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") sendMessage(); }); $("stopConversation").addEventListener("click", stopConversation); $("retryConversation").addEventListener("click", retryConversation); $("generateReport").addEventListener("click", generateReport); $("completeRun").addEventListener("click", completeRun); $("compareButton").addEventListener("click", showCompareDialog); $("reportLibraryButton").addEventListener("click", () => $("reportCard").scrollIntoView({ behavior: "smooth", block: "start" })); $("cancelCompare").addEventListener("click", () => $("compareDialog").close()); $("confirmCompare").addEventListener("click", createComparison); $("addModelButton").addEventListener("click", openModelConfig); $("cancelModelConfig").addEventListener("click", () => $("modelConfigDialog").close()); $("saveModelConfig").addEventListener("click", saveModelConfig); $("toggleTaskRail").addEventListener("click", toggleTaskRail); $("toggleInsightPanel").addEventListener("click", toggleInsightPanel); $("adminEntry").addEventListener("click", openAdmin); $("closeAdminLogin").addEventListener("click", () => $("adminDialog").close()); $("adminLoginButton").addEventListener("click", loginAdmin); $("adminLogout").addEventListener("click", logoutAdmin); $("closeAdminPanel").addEventListener("click", () => $("adminDialog").close()); $("adminPassword").addEventListener("keydown", event => { if (event.key === "Enter") loginAdmin(); });
+      applySavedLayout();
       boot();
     </script>
   </body>

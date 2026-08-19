@@ -54,6 +54,9 @@ def test_workspace_two_runs_reuse_batch_and_refresh_recovery(domain_client: Test
     assert reused.status_code == 200, reused.text
     assert reused.json()["source_batch_id"] == source["source_batch_id"]
     assert reused.json()["reused"] is True
+    legacy_lookup = domain_client.get(f"/api/v1/source-batches/{source['m1_batch_id']}")
+    assert legacy_lookup.status_code == 200, legacy_lookup.text
+    assert legacy_lookup.json()["source_batch_id"] == source["source_batch_id"]
 
     first = create_run(domain_client, workspace_id, source["source_batch_id"], "TFTEST01")
     second = create_run(domain_client, workspace_id, source["source_batch_id"], "TFTEST02")
@@ -70,6 +73,33 @@ def test_workspace_two_runs_reuse_batch_and_refresh_recovery(domain_client: Test
     recovered_runs = refreshed_client.get(f"/api/v1/workspaces/{workspace_id}/runs").json()["runs"]
     assert recovered_workspace["last_active_run_id"] == second["assessment_run_id"]
     assert {run["enterprise_code"] for run in recovered_runs} == {"TFTEST01", "TFTEST02"}
+
+
+def test_default_source_rehydrates_runtime_and_repairs_existing_run(
+    domain_client: TestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workbook_path = tmp_path / "配套数据.xlsx"
+    workbook_path.write_bytes(make_workbook())
+    monkeypatch.setattr(main, "_find_default_workbook", lambda: workbook_path)
+
+    source = domain_client.get("/api/v1/source-batches/default")
+    assert source.status_code == 200, source.text
+    source_body = source.json()
+    workspace = domain_client.post("/api/v1/workspaces", json={"name": "默认数据恢复"}).json()
+    run = create_run(domain_client, workspace["workspace_id"], source_body["source_batch_id"], "TFTEST01")
+
+    # A new runtime directory simulates relaunching from a packaged app or
+    # after the old local M1 cache was removed. The same source is re-parsed by
+    # SHA-256 and the durable run remains usable without another upload.
+    monkeypatch.setattr(main, "store", BatchStore(tmp_path / "recreated-runtime"))
+    repaired = domain_client.get("/api/v1/source-batches/default")
+    assert repaired.status_code == 200, repaired.text
+    assert repaired.json()["source_batch_id"] == source_body["source_batch_id"]
+    assert repaired.json()["m1_batch_id"] != source_body["m1_batch_id"]
+
+    detail = domain_client.get(f"/api/v1/assessment-runs/{run['assessment_run_id']}/company-detail")
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["enterprise_code"] == "TFTEST01"
 
 
 def test_messages_and_report_index_are_run_scoped(domain_client: TestClient) -> None:
@@ -242,3 +272,37 @@ def test_enterprise_index_rejects_reference_conclusion_fields(domain_client: Tes
         },
     )
     assert run.status_code == 400
+
+
+def test_custom_model_config_is_persisted_but_key_is_never_returned(domain_client: TestClient) -> None:
+    created = domain_client.post(
+        "/api/v1/model-configs",
+        json={
+            "model_name": "custom-chat-model",
+            "base_url": "https://provider.example/compatible-mode/v1",
+            "api_key": "secret-custom-key",
+            "supports_vision": True,
+        },
+    )
+    assert created.status_code == 200, created.text
+    body = created.json()
+    model = body["model"]
+    assert model["model_name"] == "custom-chat-model"
+    assert model["supports_vision"] is True
+    assert "secret-custom-key" not in json.dumps(body, ensure_ascii=False)
+
+    listed = domain_client.get("/api/v1/model-configs")
+    assert listed.status_code == 200
+    assert listed.json()["models"][0]["model_id"] == model["model_id"]
+    assert "secret-custom-key" not in json.dumps(listed.json(), ensure_ascii=False)
+
+    capabilities = domain_client.get("/api/v1/models")
+    assert capabilities.status_code == 200
+    custom = next(item for item in capabilities.json()["models"] if item["model_id"] == model["model_id"])
+    assert custom["custom"] is True
+    assert custom["supports_vision"] is True
+    assert "secret-custom-key" not in json.dumps(capabilities.json(), ensure_ascii=False)
+
+    deleted = domain_client.delete(f"/api/v1/model-configs/{model['model_id']}")
+    assert deleted.status_code == 200
+    assert domain_client.get("/api/v1/model-configs").json()["models"] == []

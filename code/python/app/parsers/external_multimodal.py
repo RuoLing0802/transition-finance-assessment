@@ -129,6 +129,16 @@ class ExternalMultimodalClient:
             timeout=float(os.environ.get("TRANSITION_FINANCE_MULTIMODAL_TIMEOUT_SECONDS", "45")),
         )
 
+    @classmethod
+    def from_model_config(cls, stored_config: dict[str, Any], *, model_override: str | None = None) -> "ExternalMultimodalClient":
+        return cls(
+            base_url=str(stored_config.get("base_url") or "").strip(),
+            api_key=str(stored_config.get("api_key") or ""),
+            model=model_override or str(stored_config.get("model_name") or "").strip(),
+            provider=str(stored_config.get("provider_id") or "openai-compatible").strip(),
+            timeout=max(1.0, min(float(stored_config.get("timeout", 45.0)), 180.0)),
+        )
+
     @property
     def configured(self) -> bool:
         return bool(self.base_url and self.api_key and self.model)

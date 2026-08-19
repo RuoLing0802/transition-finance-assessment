@@ -8,12 +8,13 @@ import uuid
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
+from urllib.parse import urlparse
 
 from .config import APPLICATION_DATA_ROOT, REQUIRED_HEADERS, SIMULATED_DATA_NOTICE
 from .parsers.multimodal import safe_filename
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,24}-[A-Za-z0-9_-]{2,80}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 COMPARABLE_RUN_STATUSES = {"completed", "archived"}
@@ -258,6 +259,25 @@ class DomainStore:
                     PRAGMA user_version = 3;
                     """
                 )
+            if version < 4:
+                connection.executescript(
+                    """
+                    CREATE TABLE IF NOT EXISTS model_configs (
+                        model_config_id TEXT PRIMARY KEY,
+                        model_name TEXT NOT NULL,
+                        display_name TEXT NOT NULL,
+                        provider_id TEXT NOT NULL,
+                        base_url TEXT NOT NULL,
+                        api_key TEXT NOT NULL,
+                        supports_vision INTEGER NOT NULL DEFAULT 0,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_model_configs_updated
+                        ON model_configs(updated_at DESC);
+                    PRAGMA user_version = 4;
+                    """
+                )
 
     @staticmethod
     def _workspace(row: sqlite3.Row) -> dict[str, Any]:
@@ -303,9 +323,10 @@ class DomainStore:
         enterprise = connection.execute(
             "SELECT * FROM enterprise_profiles WHERE enterprise_id = ?", (row["enterprise_id"],)
         ).fetchone()
-        source = connection.execute(
-            "SELECT * FROM source_batches WHERE source_batch_id = ?", (row["source_batch_id"],)
-        ).fetchone()
+        source = self._find_source_batch_row(connection, row["source_batch_id"])
+        if source is None:
+            snapshot = _loads(row["batch_snapshot_json"], {})
+            source = self._find_source_batch_row(connection, snapshot.get("m1_batch_id"))
         return {
             "assessment_run_id": row["assessment_run_id"],
             "workspace_id": row["workspace_id"],
@@ -325,6 +346,21 @@ class DomainStore:
             "created_at": row["created_at"],
             "updated_at": row["updated_at"],
         }
+
+    @staticmethod
+    def _find_source_batch_row(connection: sqlite3.Connection, batch_reference: str | None) -> sqlite3.Row | None:
+        """Resolve both the durable source_batch_id and legacy M1 batch_id.
+
+        Older local runs could retain the M1 filesystem batch ID in the UI-facing
+        source_batch_id slot. Keeping this read-side compatibility avoids forcing
+        users to re-upload the workbook just to switch back to an existing run.
+        """
+        if not batch_reference:
+            return None
+        return connection.execute(
+            "SELECT * FROM source_batches WHERE source_batch_id = ? OR m1_batch_id = ? LIMIT 1",
+            (batch_reference, batch_reference),
+        ).fetchone()
 
     def _get_workspace_row(self, connection: sqlite3.Connection, workspace_id: str) -> sqlite3.Row:
         validate_domain_id(workspace_id)
@@ -349,6 +385,103 @@ class DomainStore:
         with self._connection() as connection:
             rows = connection.execute("SELECT * FROM workspaces ORDER BY updated_at DESC").fetchall()
             return [self._workspace(row) for row in rows]
+
+    @staticmethod
+    def _model_config(row: sqlite3.Row, *, include_secret: bool = False) -> dict[str, Any]:
+        payload = {
+            "model_config_id": row["model_config_id"],
+            "model_id": row["model_config_id"],
+            "model_name": row["model_name"],
+            "display_name": row["display_name"],
+            "provider_id": row["provider_id"],
+            "base_url": row["base_url"],
+            "supports_vision": bool(row["supports_vision"]),
+            "api_key_configured": bool(row["api_key"]),
+            "created_at": row["created_at"],
+            "updated_at": row["updated_at"],
+        }
+        if include_secret:
+            payload["api_key"] = row["api_key"]
+        return payload
+
+    @staticmethod
+    def _validate_model_config(*, model_name: str, display_name: str, provider_id: str, base_url: str, api_key: str) -> tuple[str, str, str, str, str]:
+        values = {
+            "model_name": model_name.strip(),
+            "display_name": display_name.strip() or model_name.strip(),
+            "provider_id": provider_id.strip() or "openai-compatible",
+            "base_url": base_url.strip().rstrip("/"),
+            "api_key": api_key.strip(),
+        }
+        if not values["model_name"]:
+            raise DomainValidationError("模型名称不能为空")
+        if not values["base_url"]:
+            raise DomainValidationError("接口地址不能为空")
+        parsed = urlparse(values["base_url"])
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password:
+            raise DomainValidationError("接口地址必须是不含账号密码的HTTP或HTTPS地址")
+        if any(char.isspace() for char in values["base_url"]):
+            raise DomainValidationError("接口地址不能包含空白字符")
+        if not values["api_key"]:
+            raise DomainValidationError("API key不能为空")
+        if any(marker in values["provider_id"].lower() for marker in ("key", "secret", "token", "password")):
+            raise DomainValidationError("服务商标识不能包含密钥字段")
+        return values["model_name"], values["display_name"], values["provider_id"], values["base_url"], values["api_key"]
+
+    def create_model_config(
+        self,
+        *,
+        model_name: str,
+        display_name: str,
+        provider_id: str,
+        base_url: str,
+        api_key: str,
+        supports_vision: bool = False,
+    ) -> dict[str, Any]:
+        model_name, display_name, provider_id, base_url, api_key = self._validate_model_config(
+            model_name=model_name,
+            display_name=display_name,
+            provider_id=provider_id,
+            base_url=base_url,
+            api_key=api_key,
+        )
+        now = _now()
+        model_config_id = _new_id("mdl")
+        with self._connection() as connection:
+            connection.execute(
+                """INSERT INTO model_configs(
+                    model_config_id,model_name,display_name,provider_id,base_url,api_key,
+                    supports_vision,created_at,updated_at
+                ) VALUES(?,?,?,?,?,?,?,?,?)""",
+                (model_config_id, model_name, display_name, provider_id, base_url, api_key, int(supports_vision), now, now),
+            )
+            return self._model_config(
+                connection.execute("SELECT * FROM model_configs WHERE model_config_id = ?", (model_config_id,)).fetchone()
+            )
+
+    def list_model_configs(self) -> list[dict[str, Any]]:
+        with self._connection() as connection:
+            rows = connection.execute("SELECT * FROM model_configs ORDER BY updated_at DESC, model_config_id").fetchall()
+            return [self._model_config(row) for row in rows]
+
+    def get_model_config(self, model_config_id: str, *, include_secret: bool = False) -> dict[str, Any]:
+        validate_domain_id(model_config_id)
+        with self._connection() as connection:
+            row = connection.execute("SELECT * FROM model_configs WHERE model_config_id = ?", (model_config_id,)).fetchone()
+            if row is None:
+                raise DomainNotFoundError(f"模型配置不存在：{model_config_id}")
+            return self._model_config(row, include_secret=include_secret)
+
+    def delete_model_config(self, model_config_id: str) -> dict[str, Any]:
+        validate_domain_id(model_config_id)
+        with self._connection() as connection:
+            row = connection.execute("SELECT * FROM model_configs WHERE model_config_id = ?", (model_config_id,)).fetchone()
+            if row is None:
+                raise DomainNotFoundError(f"模型配置不存在：{model_config_id}")
+            deleted = self._model_config(row)
+            connection.execute("DELETE FROM model_configs WHERE model_config_id = ?", (model_config_id,))
+            deleted["deleted"] = True
+            return deleted
 
     def get_workspace(self, workspace_id: str) -> dict[str, Any]:
         with self._connection() as connection:
@@ -395,13 +528,95 @@ class DomainStore:
             row = connection.execute("SELECT * FROM source_batches WHERE source_batch_id = ?", (source_batch_id,)).fetchone()
             return self._source_batch(row)
 
+    def ensure_source_batch_runtime(
+        self,
+        *,
+        m1_batch_id: str,
+        source_filename: str,
+        sha256: str,
+        validation_status: str,
+        available_company_codes: list[str],
+        source: str = "bundled_simulated_data",
+        simulated_data: bool = True,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Register the bundled workbook and repair its local M1 runtime link.
+
+        The SQLite domain record is durable, while parsed M1 artifacts live in a
+        runtime directory that can change between source checkouts and packaged
+        app launches. Matching by SHA-256 lets startup restore the same source
+        batch without asking the user to upload the workbook again.
+        """
+        if not SHA256_PATTERN.fullmatch(sha256):
+            raise DomainValidationError("source_batch必须提供64位SHA-256")
+        with self._connection() as connection:
+            existing = connection.execute("SELECT * FROM source_batches WHERE sha256 = ?", (sha256,)).fetchone()
+            if existing is None:
+                source_batch_id = _new_id("src")
+                now = _now()
+                connection.execute(
+                    """INSERT INTO source_batches(
+                        source_batch_id,m1_batch_id,source_filename,sha256,source,simulated_data,
+                        validation_status,available_company_codes_json,metadata_json,created_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?)""",
+                    (
+                        source_batch_id,
+                        m1_batch_id,
+                        source_filename,
+                        sha256,
+                        source,
+                        int(simulated_data),
+                        validation_status,
+                        _json(sorted(set(available_company_codes))),
+                        _json(metadata or {}),
+                        now,
+                    ),
+                )
+                existing = connection.execute(
+                    "SELECT * FROM source_batches WHERE source_batch_id = ?", (source_batch_id,)
+                ).fetchone()
+                return self._source_batch(existing)
+
+            conflicting = connection.execute(
+                "SELECT source_batch_id FROM source_batches WHERE m1_batch_id = ? AND source_batch_id != ?",
+                (m1_batch_id, existing["source_batch_id"]),
+            ).fetchone()
+            if conflicting is not None:
+                raise DomainConflictError("M1批次标识已绑定到另一份数据，无法自动恢复")
+            connection.execute(
+                """UPDATE source_batches SET m1_batch_id = ?, source_filename = ?, source = ?,
+                    simulated_data = ?, validation_status = ?, available_company_codes_json = ?, metadata_json = ?
+                    WHERE source_batch_id = ?""",
+                (
+                    m1_batch_id,
+                    source_filename,
+                    source,
+                    int(simulated_data),
+                    validation_status,
+                    _json(sorted(set(available_company_codes))),
+                    _json(metadata or {}),
+                    existing["source_batch_id"],
+                ),
+            )
+            row = connection.execute(
+                "SELECT * FROM source_batches WHERE source_batch_id = ?", (existing["source_batch_id"],)
+            ).fetchone()
+            return self._source_batch(row, reused=True)
+
     def get_source_batch(self, source_batch_id: str) -> dict[str, Any]:
         validate_domain_id(source_batch_id)
         with self._connection() as connection:
-            row = connection.execute("SELECT * FROM source_batches WHERE source_batch_id = ?", (source_batch_id,)).fetchone()
+            row = self._find_source_batch_row(connection, source_batch_id)
             if row is None:
                 raise DomainNotFoundError(f"数据批次不存在：{source_batch_id}")
             return self._source_batch(row)
+
+    def get_source_batch_by_sha256(self, sha256: str) -> dict[str, Any] | None:
+        if not SHA256_PATTERN.fullmatch(sha256):
+            raise DomainValidationError("source_batch必须提供64位SHA-256")
+        with self._connection() as connection:
+            row = connection.execute("SELECT * FROM source_batches WHERE sha256 = ?", (sha256,)).fetchone()
+            return self._source_batch(row) if row is not None else None
 
     def create_assessment_run(
         self,
@@ -425,7 +640,7 @@ class DomainStore:
         with self._connection() as connection:
             self._get_workspace_row(connection, workspace_id)
             validate_domain_id(source_batch_id)
-            source = connection.execute("SELECT * FROM source_batches WHERE source_batch_id = ?", (source_batch_id,)).fetchone()
+            source = self._find_source_batch_row(connection, source_batch_id)
             if source is None:
                 raise DomainNotFoundError(f"数据批次不存在：{source_batch_id}")
             if source["validation_status"] == "failed":

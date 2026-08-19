@@ -16,13 +16,14 @@ from fastapi import FastAPI, File, Form, Header, HTTPException, Query, UploadFil
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from .config import FIELD_CONTRACT_VERSION, MAX_UPLOAD_BYTES, RULE_VERSION, SIMULATED_DATA_NOTICE
+from .config import FIELD_CONTRACT_VERSION, MAX_UPLOAD_BYTES, PROJECT_ROOT, RULE_VERSION, SIMULATED_DATA_NOTICE
 from .domain_schemas import (
     AssessmentRunCreate,
     AssessmentRunUpdate,
     ComparisonViewCreate,
     ConversationMessageCreate,
     ConversationTurnCreate,
+    ModelConfigCreate,
     ReportArtifactCreate,
     ReportExportRequest,
     SourceBatchRegister,
@@ -35,7 +36,7 @@ from .domain_store import (
     DomainValidationError,
 )
 from .m1_core import WorkbookAnalyzer
-from .model_providers import OpenAICompatibleSessionProvider, vision_route
+from .model_providers import OpenAICompatibleSessionProvider, vision_route_with_capability
 from .orchestration import OrchestrationService
 from .parsers import classify_file, parse_file, sha256_bytes
 from .reporting import build_basic_report
@@ -101,11 +102,74 @@ def _get_domain_store() -> DomainStore:
     return domain_store
 
 
+DEFAULT_WORKBOOK_RELATIVE_PATH = Path(
+    "27-多模态技术与数据治理赛道-碳迹可循，绿贷智评：基于多维度数据与行业标准的企业转型金融评估系统"
+) / "配套数据.xlsx"
+
+
+def _find_default_workbook() -> Path | None:
+    """Locate the competition workbook shipped with the local project package."""
+    candidates = [
+        PROJECT_ROOT / DEFAULT_WORKBOOK_RELATIVE_PATH,
+        PROJECT_ROOT / "配套数据.xlsx",
+        Path(__file__).resolve().parent / "bundled_data" / "配套数据.xlsx",
+        Path(__file__).resolve().parent / "bundled_data" / "default_workbook.xlsx",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _ensure_default_source_batch() -> dict[str, Any] | None:
+    """Make the known competition workbook available without a user upload."""
+    workbook_path = _find_default_workbook()
+    if workbook_path is None:
+        return None
+    content = workbook_path.read_bytes()
+    fingerprint = sha256_bytes(content)
+    domain = _get_domain_store()
+    existing = domain.get_source_batch_by_sha256(fingerprint)
+    if existing is not None:
+        try:
+            _require_batch(existing["m1_batch_id"])
+            return existing
+        except HTTPException:
+            # The durable domain record survived, but its parsed M1 runtime did not.
+            # Re-ingest the same bytes and rebind the existing source_batch_id below.
+            pass
+
+    summary = _ingest_workbook(workbook_path.name, content)
+    validation = summary.get("validation", {})
+    return domain.ensure_source_batch_runtime(
+        m1_batch_id=summary["batch_id"],
+        source_filename=summary.get("source_filename", workbook_path.name),
+        sha256=summary["sha256"],
+        source="bundled_simulated_data",
+        validation_status=summary.get("status", validation.get("status", "failed")),
+        available_company_codes=validation.get("company_codes", []),
+        simulated_data=True,
+        metadata={
+            "field_contract_version": summary.get("field_contract_version"),
+            "quality_overview": summary.get("quality_overview"),
+            "default_source": True,
+            "source_path": workbook_path.name,
+        },
+    )
+
+
 def _get_orchestration_service() -> OrchestrationService:
     global orchestration_service
     current_store = _get_domain_store()
     if orchestration_service is None or orchestration_service.domain_store is not current_store:
-        orchestration_service = OrchestrationService(current_store, _run_analysis)
+        orchestration_service = OrchestrationService(
+            current_store,
+            _run_analysis,
+            provider_factory=lambda model_id: OpenAICompatibleSessionProvider.from_environment(
+                model_id=model_id,
+                model_config_loader=lambda selected_id: current_store.get_model_config(selected_id, include_secret=True),
+            ),
+        )
     return orchestration_service
 
 
@@ -239,6 +303,17 @@ def register_source_batch(request: SourceBatchRegister) -> dict[str, Any]:
         )
     except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
         raise _domain_error(exc) from exc
+
+
+@app.get("/api/v1/source-batches/default")
+def get_default_source_batch() -> dict[str, Any]:
+    try:
+        source = _ensure_default_source_batch()
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError, OSError, ValueError) as exc:
+        raise _domain_error(exc) from exc
+    if source is None:
+        raise HTTPException(status_code=404, detail="项目目录中未找到配套数据.xlsx")
+    return source
 
 
 @app.get("/api/v1/source-batches/{source_batch_id}")
@@ -593,7 +668,7 @@ def parser_capabilities() -> dict[str, Any]:
 @app.get("/api/v1/models")
 def session_model_capabilities() -> dict[str, Any]:
     capability = OpenAICompatibleSessionProvider.from_environment().capability()
-    models = OpenAICompatibleSessionProvider.available_models_from_environment()
+    models = OpenAICompatibleSessionProvider.available_models_from_environment(_get_domain_store().list_model_configs())
     return {
         "models": models,
         "offline": {
@@ -606,6 +681,40 @@ def session_model_capabilities() -> dict[str, Any]:
         "default_model_id": capability.get("model_id") if capability.get("available") else None,
         "notice": "模型列表只显示已在后端受控环境中配置的外部模型；规则、权重、阈值和评分配置不属于模型选项。",
     }
+
+
+@app.post("/api/v1/model-configs")
+def create_model_config(request: ModelConfigCreate) -> dict[str, Any]:
+    try:
+        return {
+            "model": _get_domain_store().create_model_config(
+                model_name=request.model_name,
+                display_name=request.display_name or request.model_name,
+                provider_id=request.provider_id,
+                base_url=request.base_url,
+                api_key=request.api_key,
+                supports_vision=request.supports_vision,
+            ),
+            "notice": "API key仅保存在本机后端应用数据中，不会返回到模型列表、前端日志或报告。",
+        }
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
+        raise _domain_error(exc) from exc
+
+
+@app.get("/api/v1/model-configs")
+def list_model_configs() -> dict[str, Any]:
+    return {
+        "models": _get_domain_store().list_model_configs(),
+        "notice": "列表只返回脱敏配置；API key不会返回。",
+    }
+
+
+@app.delete("/api/v1/model-configs/{model_config_id}")
+def delete_model_config(model_config_id: str) -> dict[str, Any]:
+    try:
+        return _get_domain_store().delete_model_config(model_config_id)
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
+        raise _domain_error(exc) from exc
 
 
 @app.post("/api/v1/admin/session")
@@ -681,14 +790,28 @@ async def upload_run_attachment(
                 }
         else:
             selected_model_id = session_model_id or (run.get("model_config") or {}).get("model_id")
-            model_routing = vision_route(selected_model_id) if file_type in {"image", "pdf"} else None
+            custom_model_config = None
+            if selected_model_id:
+                try:
+                    custom_model_config = domain.get_model_config(selected_model_id, include_secret=True)
+                except (DomainValidationError, DomainNotFoundError):
+                    custom_model_config = None
+            model_routing = (
+                vision_route_with_capability(
+                    selected_model_id,
+                    supports_vision=custom_model_config["supports_vision"] if custom_model_config else None,
+                )
+                if file_type in {"image", "pdf"}
+                else None
+            )
             external_client = None
             if model_routing is not None:
                 from .parsers.external_multimodal import ExternalMultimodalClient
 
-                candidate_client = ExternalMultimodalClient.from_environment(
-                    model_override=model_routing["vision_model_id"]
-                )
+                if custom_model_config and model_routing["vision_model_id"] == selected_model_id:
+                    candidate_client = ExternalMultimodalClient.from_model_config(custom_model_config)
+                else:
+                    candidate_client = ExternalMultimodalClient.from_environment(model_override=model_routing["vision_model_id"])
                 if candidate_client.configured:
                     external_client = candidate_client
             parse_path = domain.root / relative_path
@@ -828,24 +951,8 @@ def list_workspace_comparison_views(workspace_id: str) -> dict[str, Any]:
         raise _domain_error(exc) from exc
 
 
-@app.post("/api/v1/documents")
-async def upload_document(file: UploadFile = File(...)) -> dict[str, Any]:
-    filename = file.filename or "upload.xlsx"
-    if not filename.lower().endswith(".xlsx"):
-        raise HTTPException(status_code=400, detail="M1当前只接收.xlsx文件")
-    chunks: list[bytes] = []
-    total = 0
-    while total <= MAX_UPLOAD_BYTES:
-        chunk = await file.read(min(1024 * 1024, MAX_UPLOAD_BYTES + 1 - total))
-        if not chunk:
-            break
-        chunks.append(chunk)
-        total += len(chunk)
-        if total > MAX_UPLOAD_BYTES:
-            raise HTTPException(status_code=413, detail=f"上传文件超过M1限制（{MAX_UPLOAD_BYTES // (1024 * 1024)} MiB）")
-    content = b"".join(chunks)
-    if not content:
-        raise HTTPException(status_code=400, detail="上传文件为空")
+def _ingest_workbook(filename: str, content: bytes) -> dict[str, Any]:
+    """Save, parse, and persist one workbook using the same path for upload/default data."""
     metadata = store.create_batch(filename, content)
     try:
         analyzer = WorkbookAnalyzer(store.source_path(metadata["batch_id"]), metadata["batch_id"])
@@ -898,6 +1005,27 @@ async def upload_document(file: UploadFile = File(...)) -> dict[str, Any]:
         }
     store.save_json(metadata["batch_id"], "result.json", summary)
     return summary
+
+
+@app.post("/api/v1/documents")
+async def upload_document(file: UploadFile = File(...)) -> dict[str, Any]:
+    filename = file.filename or "upload.xlsx"
+    if not filename.lower().endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="M1当前只接收.xlsx文件")
+    chunks: list[bytes] = []
+    total = 0
+    while total <= MAX_UPLOAD_BYTES:
+        chunk = await file.read(min(1024 * 1024, MAX_UPLOAD_BYTES + 1 - total))
+        if not chunk:
+            break
+        chunks.append(chunk)
+        total += len(chunk)
+        if total > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail=f"上传文件超过M1限制（{MAX_UPLOAD_BYTES // (1024 * 1024)} MiB）")
+    content = b"".join(chunks)
+    if not content:
+        raise HTTPException(status_code=400, detail="上传文件为空")
+    return _ingest_workbook(filename, content)
 
 
 @app.get("/api/v1/jobs/{batch_id}")
