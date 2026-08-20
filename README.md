@@ -10,17 +10,18 @@
 
 ## 当前状态
 
-- 阶段：M3专业Agent工作台与M4可恢复工作流已完成01审查和正式集成；M5知识检索待单独策划，尚未启动。
-- 正式总体计划：[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) v1.9，是本项目唯一正式总体计划。
+- 阶段：M3专业Agent工作台与M4可恢复工作流已完成01审查和正式集成；钟同学政策规则交付已完成01结构与边界审查并归档为M5候选知识源，M5软件开发尚未启动。
+- 正式总体计划：[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) v1.10，是本项目唯一正式总体计划。
 - 总体方案：已确认保留“8行业框架＋2行业深验”；铜产业为第一深验行业，第二深验行业待配套模拟数据审计、正式标准和评审需要进一步确认。
 - 配套数据：命题方配套模拟数据已经取得，文件保存在本地未跟踪目录；该数据脱敏、模拟生成，仅用于比赛开发测试，不是真实企业业务数据。
 - 数据缺口：当前仍未取得独立数据字典、训练/测试划分和正式评分标签；不得据此宣称模型效果、评分结果或真实企业结论。
 - 工作簿分工：`基本信息`、`能耗信息`、`补充信息`为主要输入；`转型目录`为规则与知识来源；`转型规划结论`为参考结论和验证对照，不得作为同一模型输入特征。
 - 03初步审计：已归档企业表主键闭合、缺失/重复、单位观察、语义一致性、目录覆盖缺口和泄漏风险；详见 [`docs/DATA_PROFILE.md`](docs/DATA_PROFILE.md)。候选数据契约详见 [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md)，其中宽转长、缺失等级、目录ID和质量阻断规则仍待若翎确认。
-- 工程审查：M1/M2基线、M3 React工作台和M4可恢复工作流均已通过01审查。M4分拆验证覆盖全部`60`项Python测试，前端为`3 test files / 5 tests passed`；详见[`docs/DEVELOPMENT_REVIEW.md`](docs/DEVELOPMENT_REVIEW.md) v0.3与[`docs/M4_DEVELOPMENT_REVIEW.md`](docs/M4_DEVELOPMENT_REVIEW.md) v1.0。
+- 工程审查：M1/M2基线、M3 React工作台和M4可恢复工作流均已通过01审查。M4分拆验证覆盖全部`60`项Python测试，前端为`3 test files / 5 tests passed`；详见[`docs/DEVELOPMENT_REVIEW.md`](docs/DEVELOPMENT_REVIEW.md) v0.4与[`docs/M4_DEVELOPMENT_REVIEW.md`](docs/M4_DEVELOPMENT_REVIEW.md) v1.0。
 - 已接入技术：React、TypeScript、Vite、Ant Design、ECharts、FastAPI、Pydantic、原生`sqlite3`、LangGraph、LangChain Core、运行级SQLite检查点和离线回退。LangGraph只负责状态编排，LangChain Core只包装确定性节点，不接管企业事实、规则、评分或证据。
 - 02开发指导：[`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md) v0.7记录当前正式基线和阶段边界；[`docs/M3_DEVELOPMENT_PROMPT.md`](docs/M3_DEVELOPMENT_PROMPT.md) v1.0保留为M3历史执行依据。M5必须另行策划和授权。
 - 后续顺序：M5知识检索 → M6碳核算 → M7行业对标与转型行为 → M8评分与信贷支持 → 报告扩展、Windows与正式分发。该顺序不删减“8行业框架＋2行业深验”最终MVP范围。
+- 政策规则进度：两份精简工作簿和清理清单已归档；可读取的条款、证据定位、铜路径、行业覆盖和因子准入信息已形成。因`source_id`冲突、个人绝对路径、来源链接和适用边界仍待统一，当前只作为候选知识/规则资产，新增因子允许自动调用为0条。详见[`docs/POLICY_RULES_REVIEW.md`](docs/POLICY_RULES_REVIEW.md)。
 - 公开边界：原始配套数据、ZIP和解压目录由`.gitignore`排除，不上传公开GitHub。
 - 开发授权：只有收到完全一致的口令“开始开发MVP”后，才进入程序开发阶段。
 
@@ -35,7 +36,8 @@
 5. `docs/DECISIONS.md`、`docs/DATA_STATUS.md`、`docs/TEAM_ROLES.md`
 6. `docs/SYNC_WORKFLOW.md`、`docs/CODEX_ONBOARDING.md`
 7. `docs/TASK_BOARD.md`、`handoffs/README.md`（工具可选，但接入时阅读说明）
-8. `企业转型金融智能评估系统-项目统领提示词-计划模式.md`（历史规划输入，仅作追溯）
+8. [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)（目录和十模块导航）
+9. `项目材料/历史规划/企业转型金融智能评估系统-项目统领提示词-计划模式.md`（历史规划输入，仅作追溯）
 
 统一接入提示词见 [`docs/CODEX_ONBOARDING.md`](docs/CODEX_ONBOARDING.md)。
 
@@ -43,13 +45,14 @@
 
 ### 已有材料
 
-- `27-多模态技术与数据治理赛道-江西普惠征信-碳迹可循，绿贷智评：基于多维度数据与行业标准的企业转型金融评估系统.docx`：目标赛题书。
+- `项目材料/赛题与赛事/重点赛题/27-多模态技术与数据治理赛道-江西普惠征信-碳迹可循，绿贷智评：基于多维度数据与行业标准的企业转型金融评估系统.docx`：目标赛题书重点入口。
 - `27-多模态技术与数据治理赛道-碳迹可循，绿贷智评：基于多维度数据与行业标准的企业转型金融评估系统/配套数据.xlsx`：命题方配套脱敏模拟数据，已到达但不纳入公开仓库。
-- `附件1：第五届中国研究生金融科技创新大赛参赛指南.pdf`：赛事流程、提交要求和统一可运行性测试要求。
-- `附件3：第五届中国研究生金融科技创新大赛精益画布模板.pptx`：精益画布模板。
-- `赛题文件/`：其他揭榜赛题材料，用于横向理解赛道和技术要求。
-- `图片信息/`：往届作品经验分享图，仅作评审偏好和表达方式参考，不得照搬成果、指标或技术选型。
-- `企业转型金融智能评估系统-项目统领提示词-计划模式.md`：本项目此前的一次性规划输入，仅作历史追溯，不再作为当前任务指令。
+- `项目材料/赛题与赛事/赛事附件/附件1：第五届中国研究生金融科技创新大赛参赛指南.pdf`：赛事流程、提交要求和统一可运行性测试要求。
+- `项目材料/赛题与赛事/赛事附件/附件3：第五届中国研究生金融科技创新大赛精益画布模板.pptx`：精益画布模板。
+- `项目材料/赛题与赛事/全部赛题/`：全部揭榜赛题材料，用于横向理解赛道和技术要求。
+- `项目材料/往届经验参考/`：往届作品经验分享图，仅作评审偏好和表达方式参考，不得照搬成果、指标或技术选型。
+- `项目材料/历史规划/企业转型金融智能评估系统-项目统领提示词-计划模式.md`：本项目此前的一次性规划输入，仅作历史追溯，不再作为当前任务指令。
+- `团队成果/`：成员原始交付存档；不会自动成为正式项目结论。
 
 ### 项目治理文档
 
@@ -64,6 +67,8 @@
 - [`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md)：02软件开发的当前执行版、M1—M4历史验收、领域模型、接口、赛题映射和M5阶段门槛。
 - [`docs/M4_DEVELOPMENT_REVIEW.md`](docs/M4_DEVELOPMENT_REVIEW.md)：M4工作流编排、隔离边界、整改、测试和正式采纳记录。
 - [`docs/DEVELOPMENT_REVIEW.md`](docs/DEVELOPMENT_REVIEW.md)：M1—M4成果审查、产品模块、实际技术接入状态和未实现边界。
+- [`docs/POLICY_RULES_REVIEW.md`](docs/POLICY_RULES_REVIEW.md)：钟同学政策规则交付审查、冲突、采纳边界和M5知识源准备。
+- [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)：物理目录、十模块导航和文件权威层级。
 - [`docs/M3_DEVELOPMENT_PROMPT.md`](docs/M3_DEVELOPMENT_PROMPT.md)：02实施M3专业Agent工作台时使用的历史开发提示词。
 - [`docs/TEAM_ROLES.md`](docs/TEAM_ROLES.md)：固定Codex对话、5人动态分工和成果审查机制。
 - [`docs/TASK_BOARD.md`](docs/TASK_BOARD.md)：可选的简要待办清单，不是任务启动前置条件。
@@ -72,9 +77,9 @@
 - [`docs/CODEX_ONBOARDING.md`](docs/CODEX_ONBOARDING.md)：供其他成员使用的统一Codex接入提示词。
 - [`handoffs/README.md`](handoffs/README.md)：可选的成员成果存档入口。
 
-### 计划中的目录
+### 目录约定
 
-`data/raw/`、`data/interim/`、`data/processed/`、`code/stata/`、`output/`、`references/`、`logs/`等目录属于后续项目规范或开发阶段预留。`code/python/`目前包含已审查的M1/M2核心基线；不得将其解读为完整MVP、正式评分、模型效果、Windows交付或生产部署已经完成。
+`code/`、`docs/`、`data/`和`handoffs/`保持英文兼容路径；赛题材料集中在`项目材料/`，成员交付集中在`团队成果/`。十模块逻辑导航和新增文件规则见[`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)。本地配套数据目录因软件默认加载路径暂留根目录并继续忽略，不上传公开GitHub。
 
 ## 团队同步方式
 
