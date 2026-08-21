@@ -16,6 +16,7 @@
 |---|---|---|---|---|
 | `idea-evaluator` | `../.agents/skills/idea-evaluator/` | 开发前审查致命缺陷、范围、竞赛价值和可行性 | 是，开发授权前优先 | 用人工检查表审查，不缩减MVP |
 | `deep-research` | `../.agents/skills/deep-research/` | 系统性政策、行业和研究资料检索 | 研究阶段需要 | 以权威原文和人工来源表替代 |
+| `literature-reviewer-skill` | `../.agents/skills/literature-reviewer-skill/` | CNKI等中英文文献检索、去重、分析与GB/T 7714引文整理 | 中文文献研究时优先 | 使用`nature-academic-search`与人工中文数据库检索并逐条核验 |
 | `econ-write` | `../.agents/skills/econ-write/` | 金融经济论证、业务价值和报告相关段落 | 报告阶段需要 | 按“主张—证据—机制—边界”手工写作 |
 | `paper-spine` | `../.agents/skills/paper-spine/` | 统领报告结构、证据矩阵和章节衔接 | 报告阶段需要 | 用项目报告大纲和证据矩阵替代 |
 | `paper-polish` | `../.agents/skills/paper-polish/` | 最终中文/英文表达收口 | 可选 | 人工校对，保持结论强度 |
