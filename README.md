@@ -10,18 +10,18 @@
 
 ## 当前状态
 
-- 阶段：M3专业Agent工作台与M4可恢复工作流已完成01审查和正式集成；钟同学政策规则交付已完成01结构与边界审查并归档为M5候选知识源，M5软件开发尚未启动。
-- 正式总体计划：[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) v1.10，是本项目唯一正式总体计划。
-- 总体方案：已确认保留“8行业框架＋2行业深验”；铜产业为第一深验行业，第二深验行业待配套模拟数据审计、正式标准和评审需要进一步确认。
+- 阶段：M3专业Agent工作台与M4可恢复工作流已完成01审查和正式集成；03知识资产第二阶段成果经01复核后仍需定点整改，M5软件开发尚未启动。
+- 正式总体计划：[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) v1.11，是本项目唯一正式总体计划。
+- 总体方案：采用11行业统一覆盖，不再设置第一/第二深验。允许按知识和规则成熟度分批建设，但11行业最终采用相同的来源、版本、证据、检索测试和人工复核门槛。
 - 配套数据：命题方配套模拟数据已经取得，文件保存在本地未跟踪目录；该数据脱敏、模拟生成，仅用于比赛开发测试，不是真实企业业务数据。
 - 数据缺口：当前仍未取得独立数据字典、训练/测试划分和正式评分标签；不得据此宣称模型效果、评分结果或真实企业结论。
 - 工作簿分工：`基本信息`、`能耗信息`、`补充信息`为主要输入；`转型目录`为规则与知识来源；`转型规划结论`为参考结论和验证对照，不得作为同一模型输入特征。
 - 03初步审计：已归档企业表主键闭合、缺失/重复、单位观察、语义一致性、目录覆盖缺口和泄漏风险；详见 [`docs/DATA_PROFILE.md`](docs/DATA_PROFILE.md)。候选数据契约详见 [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md)，其中宽转长、缺失等级、目录ID和质量阻断规则仍待若翎确认。
 - 工程审查：M1/M2基线、M3 React工作台和M4可恢复工作流均已通过01审查。M4分拆验证覆盖全部`60`项Python测试，前端为`3 test files / 5 tests passed`；详见[`docs/DEVELOPMENT_REVIEW.md`](docs/DEVELOPMENT_REVIEW.md) v0.4与[`docs/M4_DEVELOPMENT_REVIEW.md`](docs/M4_DEVELOPMENT_REVIEW.md) v1.0。
 - 已接入技术：React、TypeScript、Vite、Ant Design、ECharts、FastAPI、Pydantic、原生`sqlite3`、LangGraph、LangChain Core、运行级SQLite检查点和离线回退。LangGraph只负责状态编排，LangChain Core只包装确定性节点，不接管企业事实、规则、评分或证据。
-- 02开发指导：[`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md) v0.7记录当前正式基线和阶段边界；[`docs/M3_DEVELOPMENT_PROMPT.md`](docs/M3_DEVELOPMENT_PROMPT.md) v1.0保留为M3历史执行依据。M5必须另行策划和授权。
-- 后续顺序：M5知识检索 → M6碳核算 → M7行业对标与转型行为 → M8评分与信贷支持 → 报告扩展、Windows与正式分发。该顺序不删减“8行业框架＋2行业深验”最终MVP范围。
-- 政策规则进度：两份精简工作簿和清理清单已归档；可读取的条款、证据定位、铜路径、行业覆盖和因子准入信息已形成。因`source_id`冲突、个人绝对路径、来源链接和适用边界仍待统一，当前只作为候选知识/规则资产，新增因子允许自动调用为0条。详见[`docs/POLICY_RULES_REVIEW.md`](docs/POLICY_RULES_REVIEW.md)。
+- 02开发指导：[`docs/DEVELOPMENT_BRIEF.md`](docs/DEVELOPMENT_BRIEF.md) v0.8记录当前正式基线和阶段边界；[`docs/M3_DEVELOPMENT_PROMPT.md`](docs/M3_DEVELOPMENT_PROMPT.md) v1.0保留为M3历史执行依据。M5必须另行策划和授权。
+- 后续顺序：M5知识检索 → M6碳核算 → M7行业对标与转型行为 → M8评分与信贷支持 → 报告扩展、Windows与正式分发。该顺序不删减11行业统一覆盖范围。
+- 政策规则进度：03已形成11行业、46细分领域的候选知识资产，但01终审发现09行业包语义字段、12候选语料75条列错位、13跨表测试引用、14文献引用字段和部分来源状态仍需整改。整改完成前只作为候选研究资产，不交02实施；新增因子允许自动调用为0条。详见[`docs/POLICY_RULES_REVIEW.md`](docs/POLICY_RULES_REVIEW.md)。
 - 公开边界：原始配套数据、ZIP和解压目录由`.gitignore`排除，不上传公开GitHub。
 - 开发授权：只有收到完全一致的口令“开始开发MVP”后，才进入程序开发阶段。
 
