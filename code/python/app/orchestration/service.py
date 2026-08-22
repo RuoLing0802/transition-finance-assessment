@@ -37,6 +37,10 @@ _KEYWORD_TOOL_MAP = {
     "缺失": "list_quality_issues",
     "质量": "list_quality_issues",
     "附件": "list_attachments",
+    "知识": "search_knowledge",
+    "依据": "search_knowledge",
+    "来源": "search_knowledge",
+    "标准": "search_knowledge",
 }
 
 _PROCESS_TOOL_LABELS = {
@@ -49,6 +53,38 @@ _PROCESS_TOOL_LABELS = {
 }
 
 
+def _controlled_knowledge_summary(tool_results: list[dict[str, Any]]) -> tuple[str, list[str]]:
+    """Build a safe, deterministic explanation from returned evidence IDs.
+
+    The external model is not allowed to invent citations or receive hidden
+    tool state. This second-stage summary only renders IDs and metadata that
+    the run-scoped knowledge service actually returned.
+    """
+    lines: list[str] = []
+    citation_ids: list[str] = []
+    for item in tool_results:
+        if item.get("tool_name") != "search_knowledge" or item.get("status") != "succeeded":
+            continue
+        payload = item.get("result") or {}
+        results = payload.get("results") or []
+        for result in results[:5]:
+            source_id = str(result.get("source_id") or "")
+            chunk_id = str(result.get("chunk_id") or "")
+            if not source_id:
+                continue
+            citation = chunk_id or source_id
+            citation_ids.append(citation)
+            title = str(result.get("title") or source_id)
+            locator = str(result.get("locator") or "仅元数据/无正文定位")
+            visibility = str(result.get("visibility") or "unknown")
+            lines.append(f"- {source_id}{f' / {chunk_id}' if chunk_id else ''}：{title}；定位：{locator}；可见性：{visibility}")
+        for warning in payload.get("warnings") or []:
+            lines.append(f"- 检索提示：{warning}")
+    if not lines:
+        return "", []
+    return "\n\n受控知识依据摘要（仅引用本次运行返回的ID；正文仍需人工复核）：\n" + "\n".join(lines), sorted(set(citation_ids))
+
+
 class OrchestrationService:
     """Run-scoped model orchestration over a small, auditable tool surface."""
 
@@ -57,12 +93,14 @@ class OrchestrationService:
         domain_store: DomainStore,
         analysis_loader: AnalysisLoader,
         provider_factory: ProviderFactory | None = None,
+        knowledge_searcher: Callable[[str, str, int, list[str]], dict[str, Any]] | None = None,
     ) -> None:
         self.domain_store = domain_store
         self.analysis_loader = analysis_loader
         self.provider_factory = provider_factory or (
             lambda model_id: OpenAICompatibleSessionProvider.from_environment(model_id=model_id)
         )
+        self.knowledge_searcher = knowledge_searcher
         self._stop_requested: set[str] = set()
         self._lock = threading.Lock()
 
@@ -300,6 +338,7 @@ class OrchestrationService:
                     run=run,
                     analysis=analysis,
                     attachments_loader=self.domain_store.list_attachments,
+                    knowledge_searcher=self.knowledge_searcher,
                 )
                 tool_results.append({"tool_name": tool_name, "status": "succeeded", "result": result})
                 self._audit(
@@ -321,7 +360,7 @@ class OrchestrationService:
                     tool_name=tool_name,
                     payload={"status": "succeeded", "run_scoped": True},
                 )
-            except ToolBoundaryError as exc:
+            except (ToolBoundaryError, DomainConflictError) as exc:
                 error = {"code": "tool_boundary_blocked", "message": str(exc)}
                 tool_results.append({"tool_name": tool_name, "status": "blocked", "error": error})
                 self._audit(
@@ -336,9 +375,20 @@ class OrchestrationService:
                     payload={"arguments": arguments},
                     error_code="tool_boundary_blocked",
                 )
-        final_text = assistant_text.strip() or "已读取当前运行的结构化结果。"
+        knowledge_summary, citation_ids = _controlled_knowledge_summary(tool_results)
+        # When knowledge was requested, do not expose free-form model prose as
+        # if it were evidence-grounded. The deterministic second stage is the
+        # only explanation returned for that tool result, so every citation is
+        # necessarily one of the IDs returned by this run.
+        final_text = (
+            "已完成当前运行范围内的受控知识检索。"
+            if knowledge_summary
+            else assistant_text.strip() or "已读取当前运行的结构化结果。"
+        )
         if tool_results:
             final_text += "\n\n已执行受控工具：" + "、".join(item["tool_name"] for item in tool_results)
+        if knowledge_summary:
+            final_text += knowledge_summary
         if follow_ups:
             final_text += "\n\n需要补充确认：" + "；".join(follow_ups)
         assistant = self.domain_store.create_message(
@@ -352,6 +402,8 @@ class OrchestrationService:
                 "provider_id": provider_id,
                 "model_id": model_id,
                 "tool_names": [item["tool_name"] for item in tool_results],
+                "knowledge_citation_ids": citation_ids,
+                "model_explanation_suppressed": bool(knowledge_summary),
                 "follow_up_questions": follow_ups,
                 "reference_conclusion_in_context": False,
                 "data_notice": run.get("data_notice"),
@@ -370,21 +422,32 @@ class OrchestrationService:
     def _offline_turn(self, run: dict[str, Any], analysis: dict[str, Any], content: str, reason: str) -> dict[str, Any]:
         tool_name = next((tool for keyword, tool in _KEYWORD_TOOL_MAP.items() if keyword in content), None)
         tool_results: list[dict[str, Any]] = []
+        tool_error: str | None = None
+        _citation_ids: list[str] = []
         if tool_name:
             try:
+                arguments = {"query": content, "top_k": 5} if tool_name == "search_knowledge" else {}
                 result = execute_tool(
                     tool_name,
-                    {},
+                    arguments,
                     run=run,
                     analysis=analysis,
                     attachments_loader=self.domain_store.list_attachments,
+                    knowledge_searcher=self.knowledge_searcher,
                 )
                 tool_results.append({"tool_name": tool_name, "status": "succeeded", "result": result})
-            except ToolBoundaryError:
-                tool_results = []
+            except (ToolBoundaryError, DomainConflictError) as exc:
+                tool_error = str(exc)
+                tool_results.append({"tool_name": tool_name, "status": "blocked", "error": {"code": getattr(exc, "code", "tool_boundary_blocked"), "message": tool_error}})
         text = "当前未配置可用的外部会话模型，已使用离线受控流程。"
         if tool_name:
-            text += f"\n已读取：{tool_name}。"
+            if tool_error:
+                text += f"\n未能完成：{tool_name}。系统没有把失败伪装成已读取；原因：{tool_error}。"
+            else:
+                text += f"\n已读取：{tool_name}。"
+                knowledge_summary, _citation_ids = _controlled_knowledge_summary(tool_results)
+                if knowledge_summary:
+                    text += knowledge_summary
         else:
             text += "\n可继续使用企业详情、能耗变化、质量提示、目录匹配和报告接口。"
         text += f"\n降级原因：{reason}。"
@@ -399,6 +462,7 @@ class OrchestrationService:
                 "degraded": True,
                 "reason": reason,
                 "tool_names": [item["tool_name"] for item in tool_results],
+                "knowledge_citation_ids": _citation_ids if tool_name and not tool_error else [],
                 "reference_conclusion_in_context": False,
                 "data_notice": run.get("data_notice"),
             },

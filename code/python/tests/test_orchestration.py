@@ -183,6 +183,11 @@ def test_admin_diagnostics_requires_controlled_password(orchestration_client: Te
     assert authenticated.json()["access_token"]
 
 
+def test_knowledge_rebuild_requires_admin_session(orchestration_client: TestClient) -> None:
+    response = orchestration_client.post("/api/v1/knowledge/indexes/rebuild")
+    assert response.status_code == 401
+
+
 def test_process_summary_is_public_but_raw_events_require_admin_session(
     orchestration_client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
@@ -268,6 +273,26 @@ def test_external_model_can_only_execute_run_scoped_read_tools(orchestration_cli
     assert second_result["tool_results"][0]["status"] == "blocked"
     assert "不一致" in second_result["tool_results"][0]["error"]["message"]
 
+
+def test_offline_knowledge_turn_uses_real_query_and_truthful_controlled_summary(orchestration_client: TestClient) -> None:
+    _workspace, first, _second = _workspace_and_runs(orchestration_client)
+    calls: list[tuple[str, str, int, list[str]]] = []
+
+    def knowledge_searcher(run_id: str, query: str, top_k: int, roles: list[str]) -> dict:
+        calls.append((run_id, query, top_k, roles))
+        return {
+            "assessment_run_id": run_id,
+            "results": [{"source_id": "STD-001", "chunk_id": "chunk-safe", "title": "受控标准", "locator": "第1页", "visibility": "searchable_candidate"}],
+            "warnings": ["正文仍需人工复核"],
+        }
+
+    service = OrchestrationService(main.domain_store, main._run_analysis, lambda _model_id: FakeProvider(), knowledge_searcher=knowledge_searcher)
+    result = service.run_turn(first["assessment_run_id"], "请检索知识依据：铜行业节能", force_offline=True)
+    assert calls == [(first["assessment_run_id"], "请检索知识依据：铜行业节能", 5, [])]
+    assert result["tool_results"][0]["status"] == "succeeded"
+    assert "STD-001 / chunk-safe" in result["message"]["content"]
+    assert "正文仍需人工复核" in result["message"]["content"]
+    assert "已读取：search_knowledge" in result["message"]["content"]
 
 def test_unknown_tool_and_provider_failure_degrade_without_changing_run(orchestration_client: TestClient) -> None:
     _workspace, first, _second = _workspace_and_runs(orchestration_client)

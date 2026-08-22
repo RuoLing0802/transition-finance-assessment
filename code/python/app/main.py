@@ -39,6 +39,8 @@ from .domain_store import (
     DomainStore,
     DomainValidationError,
 )
+from .knowledge import KnowledgeBuildBlocked, KnowledgeService
+from .knowledge.schemas import KnowledgeSearchRequest
 from .m1_core import WorkbookAnalyzer
 from .model_providers import OpenAICompatibleSessionProvider, vision_route_with_capability
 from .orchestration import OrchestrationService
@@ -66,6 +68,7 @@ store = BatchStore()
 domain_store: DomainStore | None = None
 orchestration_service: OrchestrationService | None = None
 workflow_runtime: AssessmentWorkflowRuntime | None = None
+knowledge_service: KnowledgeService | None = None
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 FRONTEND_DIST = STATIC_DIR / "frontend-dist"
 _admin_sessions: dict[str, float] = {}
@@ -110,6 +113,14 @@ def _get_domain_store() -> DomainStore:
     if domain_store is None:
         domain_store = DomainStore()
     return domain_store
+
+
+def _get_knowledge_service() -> KnowledgeService:
+    global knowledge_service
+    current_store = _get_domain_store()
+    if knowledge_service is None or knowledge_service.domain_store is not current_store:
+        knowledge_service = KnowledgeService(current_store, analysis_loader=_run_analysis)
+    return knowledge_service
 
 
 DEFAULT_WORKBOOK_RELATIVE_PATH = Path(
@@ -178,6 +189,9 @@ def _get_orchestration_service() -> OrchestrationService:
             provider_factory=lambda model_id: OpenAICompatibleSessionProvider.from_environment(
                 model_id=model_id,
                 model_config_loader=lambda selected_id: current_store.get_model_config(selected_id, include_secret=True),
+            ),
+            knowledge_searcher=lambda run_id, query, top_k, source_roles: _get_knowledge_service().search(
+                run_id, query, top_k=top_k, source_roles=source_roles
             ),
         )
     return orchestration_service
@@ -287,6 +301,86 @@ def favicon() -> FileResponse:
 @app.get("/health")
 def health() -> dict[str, Any]:
     return {"status": "ok", "rule_version": RULE_VERSION, "simulated_data": True}
+
+
+@app.get("/api/v1/knowledge/indexes/current")
+def current_knowledge_index() -> dict[str, Any]:
+    return _get_knowledge_service().index_status()
+
+
+@app.post("/api/v1/knowledge/indexes/dry-run")
+def dry_run_knowledge_index(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    _require_admin_session(authorization)
+    return _get_knowledge_service().dry_run()
+
+
+@app.post("/api/v1/knowledge/indexes/rebuild")
+def rebuild_knowledge_index(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    _require_admin_session(authorization)
+    try:
+        return _get_knowledge_service().rebuild()
+    except KnowledgeBuildBlocked as exc:
+        raise _domain_error(exc) from exc
+
+
+@app.get("/api/v1/knowledge/sources")
+def list_knowledge_sources(
+    visibility: str | None = Query(default=None),
+    source_role: str | None = Query(default=None),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    _require_admin_session(authorization)
+    return {"sources": _get_knowledge_service().list_sources(visibility=visibility, source_role=source_role)}
+
+
+@app.get("/api/v1/knowledge/tests/gold")
+def run_knowledge_gold_tests(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    _require_admin_session(authorization)
+    results = _get_knowledge_service().run_gold_tests()
+    status_counts = {}
+    for item in results:
+        status = str(item.get("status") or ("passed" if item.get("passed") else "failed"))
+        status_counts[status] = status_counts.get(status, 0) + 1
+    return {
+        "test_count": len(results),
+        "passed_count": status_counts.get("passed", 0),
+        "correct_degrade_count": status_counts.get("correct_degrade", 0),
+        "failed_count": status_counts.get("failed", 0),
+        "not_executed_count": status_counts.get("not_executed", 0),
+        "env_blocked_count": status_counts.get("env_blocked", 0),
+        "status_counts": status_counts,
+        "results": results,
+        "notice": "13号44条仅验证M5准入、行业过滤、治理隔离和负向门禁，不代表检索准确率、企业效果或正式规则覆盖。",
+    }
+
+
+@app.post("/api/v1/assessment-runs/{assessment_run_id}/knowledge/search")
+def search_run_knowledge(assessment_run_id: str, request: KnowledgeSearchRequest) -> dict[str, Any]:
+    try:
+        return _get_knowledge_service().search(
+            assessment_run_id,
+            request.query,
+            top_k=request.top_k,
+            source_roles=request.source_roles,
+        )
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError, KnowledgeBuildBlocked) as exc:
+        raise _domain_error(exc) from exc
+
+
+@app.get("/api/v1/assessment-runs/{assessment_run_id}/knowledge/retrievals")
+def list_run_knowledge_retrievals(assessment_run_id: str) -> dict[str, Any]:
+    try:
+        return {"assessment_run_id": assessment_run_id, "retrievals": _get_knowledge_service().list_retrievals(assessment_run_id)}
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
+        raise _domain_error(exc) from exc
+
+
+@app.get("/api/v1/assessment-runs/{assessment_run_id}/knowledge/chunks/{chunk_id}")
+def get_run_knowledge_chunk(assessment_run_id: str, chunk_id: str) -> dict[str, Any]:
+    try:
+        return _get_knowledge_service().get_chunk(assessment_run_id, chunk_id)
+    except (DomainConflictError, DomainValidationError, DomainNotFoundError) as exc:
+        raise _domain_error(exc) from exc
 
 
 @app.post("/api/v1/workspaces")

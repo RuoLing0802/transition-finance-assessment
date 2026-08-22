@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import {
   App as AntdApp,
@@ -45,6 +45,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { api } from './api/client';
+import { shouldApplyKnowledgeResponse } from './api/knowledgeRequest';
 import type {
   AssessmentRun,
   Attachment,
@@ -56,11 +57,14 @@ import type {
   Workspace,
   WorkflowCheckpoint,
   WorkflowDefinition,
+  KnowledgeIndexStatus,
+  KnowledgeSearchResponse,
 } from './api/contracts';
 import { AssessmentPipeline, type PipelineStage } from './components/inspector/AssessmentPipeline';
 import { StatusBadge, type AppStatus } from './components/common/StatusBadge';
 import { ToolActivityCard } from './components/conversation/ToolActivityCard';
 import { WorkflowControlCard } from './components/workflow/WorkflowControlCard';
+import { KnowledgePanel } from './features/knowledge/KnowledgePanel';
 import './styles.css';
 
 const DEFAULT_WORKSPACE_NAME = '转型金融评估工作台';
@@ -135,6 +139,14 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [capabilities, setCapabilities] = useState<Record<string, unknown> | null>(null);
   const [workflowBusy, setWorkflowBusy] = useState<string | null>(null);
+  const [knowledgeIndex, setKnowledgeIndex] = useState<KnowledgeIndexStatus | null>(null);
+  const [knowledgeResponse, setKnowledgeResponse] = useState<KnowledgeSearchResponse | null>(null);
+  const [knowledgeQuery, setKnowledgeQuery] = useState('');
+  const [knowledgeRoles, setKnowledgeRoles] = useState<string[]>([]);
+  const [knowledgeLoading, setKnowledgeLoading] = useState(false);
+  const [knowledgeError, setKnowledgeError] = useState('');
+  const knowledgeRequestSeq = useRef(0);
+  const knowledgeAbortRef = useRef<AbortController | null>(null);
 
   const availableCodes = sourceBatch?.available_company_codes ?? ['TF0001', 'TF0002'];
   const analysis = detail?.analysis;
@@ -180,11 +192,12 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      const [workspacePayload, sourcePayload, modelPayload, capabilityPayload] = await Promise.all([
+      const [workspacePayload, sourcePayload, modelPayload, capabilityPayload, knowledgePayload] = await Promise.all([
         api.listWorkspaces(),
         api.getDefaultSourceBatch(),
         api.getModels(),
         api.getParserCapabilities(),
+        api.getKnowledgeIndex(),
       ]);
       let nextWorkspace = workspacePayload.workspaces[0];
       let nextWorkspaces = workspacePayload.workspaces;
@@ -198,6 +211,7 @@ function App() {
       setModels(modelPayload.models);
       setSelectedModel(modelPayload.default_model_id ?? modelPayload.models[0]?.model_id);
       setCapabilities(capabilityPayload);
+      setKnowledgeIndex(knowledgePayload);
       await loadRuns(nextWorkspace.workspace_id, undefined, nextWorkspaces);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '工作台初始化失败');
@@ -225,6 +239,11 @@ function App() {
   async function loadRunData(nextRun: AssessmentRun) {
     setRunLoading(true);
     setError('');
+    setKnowledgeResponse(null);
+    setKnowledgeError('');
+    setKnowledgeQuery('');
+    setKnowledgeRoles([]);
+    setKnowledgeLoading(false);
     try {
       const [nextDetail, messagePayload, summary, attachmentPayload, workflowPayload] = await Promise.all([
         api.getCompanyDetail(nextRun.assessment_run_id),
@@ -239,6 +258,7 @@ function App() {
       setAttachments(attachmentPayload.attachments);
       setWorkflowDefinitions(workflowPayload.definitions);
       setWorkflows(workflowPayload.workflows);
+      setKnowledgeIndex(await api.getKnowledgeIndex());
       const configuredModel = String(nextRun.model_config?.model_id ?? '');
       if (configuredModel && models.some((item) => item.model_id === configuredModel)) setSelectedModel(configuredModel);
     } catch (cause) {
@@ -251,8 +271,41 @@ function App() {
     }
   }
 
+  async function searchKnowledge() {
+    if (!run || !knowledgeQuery.trim() || knowledgeLoading) return;
+    const requestRunId = run.assessment_run_id;
+    const requestSeq = knowledgeRequestSeq.current + 1;
+    knowledgeRequestSeq.current = requestSeq;
+    knowledgeAbortRef.current?.abort();
+    const controller = new AbortController();
+    knowledgeAbortRef.current = controller;
+    setKnowledgeLoading(true);
+    setKnowledgeError('');
+    try {
+      const nextResponse = await api.searchKnowledge(requestRunId, knowledgeQuery.trim(), 5, knowledgeRoles, controller.signal);
+      if (!shouldApplyKnowledgeResponse({ requestSeq, currentSeq: knowledgeRequestSeq.current, requestRunId, currentRunId: run?.assessment_run_id, responseRunId: nextResponse.assessment_run_id })) return;
+      setKnowledgeResponse(nextResponse);
+      const nextIndex = await api.getKnowledgeIndex();
+      if (shouldApplyKnowledgeResponse({ requestSeq, currentSeq: knowledgeRequestSeq.current, requestRunId, currentRunId: run?.assessment_run_id, responseRunId: requestRunId })) setKnowledgeIndex(nextIndex);
+    } catch (cause) {
+      if (cause instanceof DOMException && cause.name === 'AbortError') return;
+      if (requestSeq !== knowledgeRequestSeq.current || run?.assessment_run_id !== requestRunId) return;
+      setKnowledgeResponse(null);
+      setKnowledgeError(cause instanceof Error ? cause.message : '知识依据检索失败');
+    } finally {
+      if (requestSeq === knowledgeRequestSeq.current) setKnowledgeLoading(false);
+    }
+  }
+
   useEffect(() => { void bootstrap(); }, []);
   useEffect(() => {
+    knowledgeAbortRef.current?.abort();
+    knowledgeRequestSeq.current += 1;
+    setKnowledgeResponse(null);
+    setKnowledgeError('');
+    setKnowledgeQuery('');
+    setKnowledgeRoles([]);
+    setKnowledgeLoading(false);
     if (run) void loadRunData(run);
   }, [run?.assessment_run_id]);
 
@@ -523,11 +576,12 @@ function App() {
             <div className="inspector-header"><div><span className="section-eyebrow">评估检查器</span><h2>{run?.enterprise_code ?? '尚未开始'}</h2></div>{run && <Button type="text" icon={<ReloadOutlined />} onClick={() => void loadRunData(run)} aria-label="刷新评估数据" />}</div>
             {run ? <div className="inspector-scroll">
               <section className="inspector-card pipeline-card"><div className="card-title"><span>评估进度</span><span className="progress-caption">{pipeline.filter((item) => item.status === 'done').length}/8 已完成</span></div><Progress percent={Math.round((pipeline.filter((item) => item.status === 'done').length / pipeline.length) * 100)} showInfo={false} strokeColor="#1f6a5a" trailColor="#e8ede8" size="small"/><AssessmentPipeline stages={pipeline} /></section>
-              <Collapse className="inspector-collapse" ghost defaultActiveKey={['profile', 'quality', 'energy', 'catalog']} items={[
+              <Collapse className="inspector-collapse" ghost defaultActiveKey={['profile', 'quality', 'energy', 'catalog', 'knowledge']} items={[
                 { key: 'profile', label: <span className="collapse-label"><UserOutlined /> 企业画像</span>, children: <ProfilePanel basic={basic} supplement={supplement} /> },
                 { key: 'quality', label: <span className="collapse-label"><SafetyCertificateOutlined /> 数据质量 <Tag bordered={false} className="count-tag">{qualityIssues.length}</Tag></span>, children: <QualityPanel issues={qualityIssues} /> },
                 { key: 'energy', label: <span className="collapse-label"><FundOutlined /> 能源表现</span>, children: <EnergyPanel trend={trend} chartOption={energyChartOption} /> },
                 { key: 'catalog', label: <span className="collapse-label"><FileSearchOutlined /> 转型目录候选</span>, children: <CatalogPanel catalog={catalog} /> },
+                { key: 'knowledge', label: <span className="collapse-label"><FileSearchOutlined /> 知识依据 <Tag bordered={false} className="knowledge-tag">M5</Tag></span>, children: <KnowledgePanel index={knowledgeIndex} response={knowledgeResponse} query={knowledgeQuery} sourceRoles={knowledgeRoles} loading={knowledgeLoading} error={knowledgeError} onQueryChange={setKnowledgeQuery} onSourceRolesChange={setKnowledgeRoles} onSearch={() => void searchKnowledge()} /> },
                 { key: 'reference', label: <span className="collapse-label"><SlidersOutlined /> 参考对照 <Tag bordered={false} className="reference-tag">独立层</Tag></span>, children: <ReferencePanel reference={reference} /> },
               ]} />
               <section className="inspector-card boundary-card"><div className="card-title"><span>能力边界</span><InfoCircleOutlined /></div><div className="boundary-grid"><div><span>碳核算</span><StatusBadge status="not_calculable" compact /></div><div><span>评分</span><StatusBadge status="pending" compact /></div><div><span>授信</span><StatusBadge status="not_implemented" compact /></div></div><p>缺少正式核算边界、排放因子、行业基准和评分方法，因此不输出碳排放量、评分或授信结论。</p></section>

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
+from ..knowledge.policy import has_reference_marker
+
 
 class ToolBoundaryError(ValueError):
     """The model attempted to leave the current run or call an unknown tool."""
@@ -54,6 +56,23 @@ ALLOWED_TOOLS: list[dict[str, Any]] = [
             "name": "list_attachments",
             "description": "读取当前运行附件的解析状态和证据定位摘要，不读取未经复核的原文指令。",
             "parameters": {"type": "object", "additionalProperties": False, "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_knowledge",
+            "description": "在当前运行冻结的本地知识索引中检索候选证据；返回来源、版本、定位、准入状态和使用边界，不执行规则、因子、评分或授信判断。",
+            "parameters": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "query": {"type": "string", "minLength": 1, "maxLength": 1000},
+                    "top_k": {"type": "integer", "minimum": 1, "maximum": 10},
+                    "source_roles": {"type": "array", "items": {"type": "string"}, "maxItems": 6},
+                },
+                "required": ["query"],
+            },
         },
     },
 ]
@@ -190,7 +209,7 @@ def _validate_arguments(run: dict[str, Any], arguments: Any) -> dict[str, Any]:
         return {}
     if not isinstance(arguments, dict):
         raise ToolBoundaryError("工具参数必须是JSON对象")
-    allowed = {"assessment_run_id", "enterprise_code"}
+    allowed = {"assessment_run_id", "enterprise_code", "query", "top_k", "source_roles"}
     unknown = set(arguments) - allowed
     if unknown:
         raise ToolBoundaryError(f"工具参数包含未允许字段：{', '.join(sorted(unknown))}")
@@ -210,6 +229,7 @@ def execute_tool(
     run: dict[str, Any],
     analysis: dict[str, Any],
     attachments_loader: Callable[[str], list[dict[str, Any]]],
+    knowledge_searcher: Callable[[str, str, int, list[str]], dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     if tool_name not in ALLOWED_TOOL_NAMES:
         raise ToolBoundaryError(f"工具不在当前评估运行白名单中：{tool_name}")
@@ -240,4 +260,15 @@ def execute_tool(
             "enterprise_code": run["enterprise_code"],
             "quality_issues": _without_reference_layer(analysis.get("quality_issues", [])),
         }
+    if tool_name == "search_knowledge":
+        if knowledge_searcher is None:
+            raise ToolBoundaryError("知识检索服务尚未加载")
+        query = str((arguments or {}).get("query") or "").strip()
+        if not query:
+            raise ToolBoundaryError("知识检索问题不能为空")
+        if has_reference_marker(query) or "参考结论" in query or "参考对照" in query:
+            raise ToolBoundaryError("检索请求命中参考结论边界，不能把转型规划结论或其派生内容作为知识查询输入")
+        top_k = int((arguments or {}).get("top_k") or 5)
+        source_roles = [str(item) for item in ((arguments or {}).get("source_roles") or [])]
+        return knowledge_searcher(run["assessment_run_id"], query, top_k, source_roles)
     return {"enterprise_code": run["enterprise_code"], "attachments": _attachment_context(attachments_loader(run["assessment_run_id"]))}

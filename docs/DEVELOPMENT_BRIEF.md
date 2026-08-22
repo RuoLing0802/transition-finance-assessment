@@ -1,10 +1,10 @@
 # 02_软件开发正式开发指导
 
-**版本**：v0.9
+**版本**：v1.0
 **日期**：2026-08-22
 **适用对话**：`02_软件开发`
 **项目总控**：`01_项目总控与决策`
-**当前状态**：M1—M4已由01完成正式审查和集成。M3完成React专业Agent工作台，M4完成LangGraph/LangChain Core可恢复工作流；分拆验证覆盖全部`60`项Python测试，前端为`3 test files / 5 tests passed`。M5专项执行说明已经形成于[`M5_DEVELOPMENT_PROMPT.md`](M5_DEVELOPMENT_PROMPT.md) v1.0，但知识检索尚未启动；02只有收到精确口令后才能实施。
+**当前状态**：M1—M5已由01完成正式审查和集成。M3完成React专业Agent工作台，M4完成LangGraph/LangChain Core可恢复工作流，M5完成记录级准入、SQLite/FTS5确定性检索、运行级知识冻结和知识依据面板。M5终审见[`M5_DEVELOPMENT_REVIEW.md`](M5_DEVELOPMENT_REVIEW.md) v1.0。M6专项执行说明已经形成于[`M6_DEVELOPMENT_PROMPT.md`](M6_DEVELOPMENT_PROMPT.md) v1.0，但M6软件开发尚未启动；新02 M6任务只有收到精确口令后才能实施。
 
 ## 1. 文件定位与开发门槛
 
@@ -715,12 +715,12 @@ M4不让LangGraph或LangChain承载事实、规则、评分和证据库；不把
 
 ### 31.4 后续阶段顺序
 
-- M5：在来源、版本和材料规模明确后建设知识检索层；优先评估轻量本地方案，不直接引入RAGFlow。检索结果只提供候选证据。
-- M6：碳核算基础层与版本化排放因子；缺少边界或因子时输出不可计算。
+- M5：记录级准入、四级可见性、SQLite/FTS5检索、关键词降级、运行级知识冻结、检索日志、只读Agent工具和知识依据面板已经正式接入。检索结果只提供候选证据。
+- M6：按[`M6_DEVELOPMENT_PROMPT.md`](M6_DEVELOPMENT_PROMPT.md)建设活动数据标准化、版本化因子、Decimal确定性计算和不可计算状态；生产数值等待03因子冻结包及01确认。
 - M7：行业对标、转型行为和路径识别，按11行业统一覆盖和统一验收门槛实施。
 - M8：在01/03确认权重、阈值、标签和信贷口径后实现评分与信贷支持建议。
 - 后置交付：报告扩展、Windows EXE/MSI、三端回归和正式分发。
 
 上述顺序是实施优先级调整，不是删除或缩减最终MVP。
 
-M5专项开发说明已经形成于[`M5_DEVELOPMENT_PROMPT.md`](M5_DEVELOPMENT_PROMPT.md) v1.0，冻结知识来源记录级白名单、四级可见性、版本/生效期、文档与切片标识、证据位置、引用输出、更新/删除、离线行为、跨运行权限和`转型规划结论`排除测试。12号731条候选记录当前全部禁止整表进入普通索引。若翎发送完全一致的口令“开始开发MVP”后，02才可实施。
+M5已经正式集成，详细审查见[`M5_DEVELOPMENT_REVIEW.md`](M5_DEVELOPMENT_REVIEW.md) v1.0。下一阶段以[`M6_DEVELOPMENT_PROMPT.md`](M6_DEVELOPMENT_PROMPT.md) v1.0为执行依据；若翎在新02 M6任务发送完全一致的口令“开始开发MVP”后，02才可实施。没有03条目级因子冻结包和01确认时，只能完成M6-A工程基础层，产品不得使用TEST_ONLY或候选因子生成生产排放结果。

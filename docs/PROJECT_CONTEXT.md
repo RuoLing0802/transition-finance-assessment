@@ -1,8 +1,8 @@
 # 项目主上下文
 
-**版本**：v1.7
+**版本**：v1.8
 **日期**：2026-08-22
-**状态**：M1—M4已通过01正式审查和集成；11行业统一覆盖已确认；03知识资产定点整改及补充政策文献接收完成；M5专项开发说明已形成，等待若翎授权02实施；Windows和报告扩展后置
+**状态**：M1—M5已通过01正式审查和集成；11行业统一覆盖已确认；M6策划完成，等待若翎在独立02 M6任务授权实施；Windows和报告扩展后置
 **项目负责人/主要软件开发者/技术集成人**：若翎
 **适用对象**：项目成员、项目成员各自的Codex、只读型研究或评审Agent
 
@@ -100,7 +100,7 @@ flowchart LR
 
 目标技术路线：React、TypeScript、Vite、Ant Design、ECharts；Python、FastAPI、Pydantic、SQLAlchemy；桌面版SQLite、服务器版PostgreSQL；本地不可变原件目录与SHA-256；PyMuPDF/pdfplumber、python-docx、openpyxl、PaddleOCR；JSON/YAML行业模板；Jinja2、ReportLab、python-docx；PyWebView和PyInstaller。具体版本、生产配置、签名、公证和服务器规格仍需后续确认。
 
-当前正式基线实际使用React、TypeScript、Vite、Ant Design、ECharts、Python、FastAPI、Pydantic、原生`sqlite3`、`openpyxl`、PDF/DOCX/图片解析适配、OpenAI兼容会话模型、LangGraph、LangChain Core、PyWebView和PyInstaller。M4使用LangGraph承载运行级状态图、条件路由和检查点，使用LangChain Core的`RunnableLambda`包装确定性节点；SQLite是持久化检查点的真实来源。SQLAlchemy、PostgreSQL、知识检索、正式碳核算和评分引擎尚未接入。项目文档必须把目标技术与实际接入分开表述。
+当前正式基线实际使用React、TypeScript、Vite、Ant Design、ECharts、Python、FastAPI、Pydantic、原生`sqlite3`、`openpyxl`、PDF/DOCX/图片解析适配、OpenAI兼容会话模型、LangGraph、LangChain Core、SQLite/FTS5知识检索、PyWebView和PyInstaller。M4使用LangGraph承载运行级状态图、条件路由和检查点，使用LangChain Core的`RunnableLambda`包装确定性节点；SQLite是持久化检查点和知识状态的真实来源。M5使用记录级准入、四级可见性、本地确定性检索、运行级知识版本冻结和检索日志。SQLAlchemy、PostgreSQL、正式碳核算和评分引擎尚未接入。项目文档必须把目标技术与实际接入分开表述。
 
 智能会话模式使用外部大模型调度当前评估运行：理解用户意图、规划步骤、调用受控工具、生成动态补问并解释结构化结果。一个工作空间可包含多个企业运行，但每次运行只绑定一家企业。模型选择器只选择会话调度模型；规则、因子、评分和行业模板在独立评估配置中管理。模型可以适度参与非结构化抽取、候选分析和文字生成，但不能篡改事实、公式或直接作出授信决定。为统一可运行性测试保留离线固定流程模式；多模态模型输出仍须结构校验、证据绑定和低置信度人工复核。
 
@@ -108,17 +108,17 @@ LangChain作为可选的模型、工具、提示和Agent集成层；LangGraph作
 
 ## 8. 开发里程碑与MVP范围
 
-02后续开发以[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v0.8和届时由01发布的阶段说明为依据；[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md) v1.0保留为历史执行依据。01只负责方案、审查、正式合并和Git操作，不承担日常编码。
+02后续开发以[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v1.0和01发布的阶段说明为依据；[`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md)与[`M5_DEVELOPMENT_PROMPT.md`](M5_DEVELOPMENT_PROMPT.md)保留为历史执行依据，当前M6执行依据为[`M6_DEVELOPMENT_PROMPT.md`](M6_DEVELOPMENT_PROMPT.md) v1.0。01只负责方案、审查、正式合并和Git操作，不承担日常编码。
 
-M1—M4已完成正式审查。当前覆盖配套Excel自动加载/上传、五表校验、企业代号关联、详情展示、2024—2025能耗变化、缺失提示、目录匹配、参考结论隔离、多企业工作空间、单运行隔离、多模态适配、受控模型编排、React专业Agent工作台、运行级可恢复工作流、基础对比/输出和macOS桌面入口。M4分拆验证覆盖全部`60`项Python测试；受限沙箱中的唯一失败来自桌面烟测端口权限，同一用例在允许本机端口环境中通过。前端为`3 test files / 5 tests passed`。
+M1—M5已完成正式审查。当前覆盖配套Excel自动加载/上传、五表校验、企业代号关联、详情展示、2024—2025能耗变化、缺失提示、目录匹配、参考结论隔离、多企业工作空间、单运行隔离、多模态适配、受控模型编排、React专业Agent工作台、运行级可恢复工作流、记录级知识准入、SQLite/FTS5检索、运行级知识冻结、知识依据面板、基础对比/输出和macOS桌面入口。M5专项为`16 passed`，Gold为`33 passed / 11 correct_degrade / 0 failed`；Python全量分拆覆盖78项，前端为`5 test files / 8 tests passed`。公开仓库无受控PDF时的知识降级已经有独立回归覆盖。
 
 若翎已确认保持“一个工作空间多企业、一次评估运行一企业”的内部模型。M3已经把信息密集型静态页面迁移为React专业Agent工作台：左侧为工作空间和企业运行，中间为简洁会话，右侧为可折叠评估检查器。配套模拟工作簿是默认主数据集，补充文件只归入当前运行。模型选择器只选择会话调度模型，规则/评分配置保持独立。
 
-M4已按阶段顺序引入LangGraph状态运行时和LangChain Core组件，支持两类确定性工作流、SQLite检查点、暂停/恢复、人工确认、严格乐观锁、跨运行隔离、新进程恢复与离线回退。工作流输入使用白名单视图，源头排除`reference_comparison`；`转型规划结论`不进入模型输入、检索、特征或标签。M4仍是同步执行到等待点，不宣称已验证长任务实时中断或高并发性能。M5专项说明已形成：采用记录级白名单、四级可见性、SQLite FTS5优先的本地确定性检索、运行级日志和离线降级，不直接引入RAGFlow；12号731条候选记录当前全部禁止整表进入普通索引。M6—M8依次推进碳核算、行业对标/转型行为、评分与信贷支持。Windows和报告扩展在核心评估链稳定后处理。
+M4已按阶段顺序引入LangGraph状态运行时和LangChain Core组件，支持两类确定性工作流、SQLite检查点、暂停/恢复、人工确认、严格乐观锁、跨运行隔离、新进程恢复与离线回退。M5在其上接入记录级白名单、四级可见性、SQLite FTS5优先检索、关键词降级、运行级知识冻结、检索日志、只读Agent工具和知识依据面板，不直接引入RAGFlow。工作流和检索均源头排除`reference_comparison`；`转型规划结论`不进入模型输入、检索、特征或标签。M6—M8依次推进活动数据/碳核算、行业对标/转型行为、评分与信贷支持。Windows和报告扩展在核心评估链稳定后处理。
 
 钟同学原始政策规则成果和03整理的第二阶段知识资产均已归档，D-025列明的09、12、13、14及08/10定点问题已经修订并通过跨工作簿检查。2026-08-22又接收43份唯一政策标准PDF和12篇中文全文，独立复核14条铜行业标准条款，并登记国家温室气体排放因子库的因子、政策、标准和计算器入口。上述内容只作为M5候选知识资产和M6候选因子来源；21条历史来源、15份低文本政策PDF、1份无效PDF及7篇英文全文仍待补，新增因子允许自动调用仍为0条。详见[`POLICY_RULES_REVIEW.md`](POLICY_RULES_REVIEW.md)、D-026和[`../团队成果/03_数据政策评分/19_补充政策文献与国家因子库接收审查.md`](../团队成果/03_数据政策评分/19_补充政策文献与国家因子库接收审查.md)。
 
-M1—M4不代表正式评分、碳核算、模型效果或真实业务效果已经完成。根据D-024，项目采用11行业统一覆盖，不再设置第一/第二深验；允许按成熟度分批实施，但最终验收门槛一致。精确开发口令“开始开发MVP”继续作为启动新开发实施的长期权限边界；具体实施统一由02执行。
+M1—M5不代表正式评分、碳核算、检索准确率、模型效果或真实业务效果已经完成。根据D-024，项目采用11行业统一覆盖，不再设置第一/第二深验；允许按成熟度分批实施，但最终验收门槛一致。精确开发口令“开始开发MVP”继续作为每个新开发里程碑的权限边界；具体实施统一由相应02开发任务执行。
 
 
 完整MVP采用11行业统一覆盖，并包含以下可运行、可测试、可追溯能力：
@@ -152,7 +152,7 @@ MVP必须完整保留以下范围，不得因单个成员开发压力而删除�
 
 团队共5人：若翎、吴、钟、刘、夏。若翎是主要软件开发者、技术架构负责人和最终技术集成人；其他成员不绑定固定岗位，可按实际需要参与政策标准、评分规则、数据治理、软件建议、测试、报告、精益画布、演示答辩和材料检查。
 
-若翎长期只保留少量固定Codex对话：`00_项目上下文整理与Codex交接包`已完成、可归档；`01_项目总控与决策`负责总体计划、重大决策、状态、成员成果审查、正式合并和Git操作；`02_软件开发`负责获得授权后的程序架构、开发、测试、封装与部署；`03_数据、政策与评分体系`负责正式数据审计、政策标准、行业规则与评分校准；`04_报告、PPT与答辩`待程序、数据和评分体系基本稳定后再创建。多个固定对话不等于自动调用子Agent，子Agent默认关闭，仅在若翎明确要求或明显适合并行只读分析时使用。
+若翎长期只保留少量职责分区：`00`已完成、可归档；`01_项目总控与决策`负责总体计划、重大决策、状态、成员成果审查、正式合并和Git操作；`02_软件开发`负责获得授权后的程序架构、开发、测试、封装与部署，并可按M5维护、M6开发等主要里程碑建立独立任务；`03_数据、政策与评分体系`负责正式数据审计、政策标准、行业规则、因子准入与评分校准；`04`待程序、数据和评分体系基本稳定后再创建。多个任务不等于自动调用子Agent，子Agent默认关闭，仅在若翎明确要求或明显适合并行只读分析时使用。
 
 正式仓库为公开个人GitHub仓库 <https://github.com/RuoLing0802/transition-finance-assessment>，无需成员加入Collaborator；GitHub采用单向同步，其他成员只clone、pull和读取，完成后把成果直接发送给若翎。成员无需登记任务编号、创建任务卡或生成固定交接包。`01_项目总控与决策`先区分新增、重复、冲突、过时和待确认内容，给出“建议采纳、部分采纳、暂不采纳”的审查结论，待若翎确认后再写入正式项目、提交和推送。具体规则见 [`TEAM_ROLES.md`](TEAM_ROLES.md) 与 [`SYNC_WORKFLOW.md`](SYNC_WORKFLOW.md)。
 
@@ -166,11 +166,11 @@ MVP必须完整保留以下范围，不得因单个成员开发压力而删除�
 - 已完成：登记命题方配套模拟数据的来源、文件大小、工作表、SHA-256及ZIP内外文件一致性；确认工作表输入/规则/参考结论边界。
 - 已完成：03提交的配套数据初步审计结果已由`01`区分事实与候选方案并归档；四表主键闭合、主要缺失与重复、单位观察、语义一致性、目录覆盖缺口和参考结论隔离边界已写入正式文档。
 - 已完成：M1整改与M2核心基线已通过01审查；全量Python回归为`54 passed`，参考结论泄漏隔离和运行级企业隔离继续有效。
-- 已完成：M3 React专业Agent工作台和M4可恢复工作流已由01审查并正式集成；[`DEVELOPMENT_REVIEW.md`](DEVELOPMENT_REVIEW.md) v0.5、[`M4_DEVELOPMENT_REVIEW.md`](M4_DEVELOPMENT_REVIEW.md) v1.0和[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v0.8记录当前正式状态。
+- 已完成：M3 React专业Agent工作台、M4可恢复工作流和M5可追溯知识检索层已由01审查并正式集成；[`DEVELOPMENT_REVIEW.md`](DEVELOPMENT_REVIEW.md) v0.6、[`M4_DEVELOPMENT_REVIEW.md`](M4_DEVELOPMENT_REVIEW.md) v1.0、[`M5_DEVELOPMENT_REVIEW.md`](M5_DEVELOPMENT_REVIEW.md) v1.0和[`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md) v1.0记录当前正式状态。
 - 已完成：钟同学政策标准与行业规则阶段成果已由01接收、只读审查和归档；其中可检索候选材料、待规范化冲突和因子自动调用禁用边界已记录。
-- 下一步：若翎确认[`M5_DEVELOPMENT_PROMPT.md`](M5_DEVELOPMENT_PROMPT.md) v1.0并在02发送完全一致的口令“开始开发MVP”后，由02实施M5；03并行继续补齐被记录级阻断的来源、低文本定位、英文全文及数据字典、字段口径、标签、因子和折标系数。
-- 尚未开始或尚未完成：知识检索、正式评分校准、碳核算、行业对标、模型效果验证、Windows交付、生产部署和竞赛最终材料制作。
-- 当前缺口：独立数据字典、训练/测试划分、正式评分标签、标准全文、排放因子和部分行业资料未齐；宽转长、缺失等级、质量阻断、目录`rule_id`、评分权重、阈值和模型待确认。这些缺口影响校准与后续实现，但不改变11行业统一覆盖范围。
+- 下一步：若翎在新建的独立02 M6任务发送完全一致的口令“开始开发MVP”后，由02按[`M6_DEVELOPMENT_PROMPT.md`](M6_DEVELOPMENT_PROMPT.md)实施M6-A；03并行形成条目级因子冻结包，01确认后再进入M6-B生产因子计算。
+- 尚未开始或尚未完成：正式碳核算数值、行业对标、转型行为、正式评分校准、信贷支持、模型效果验证、Windows交付、生产部署和竞赛最终材料制作。
+- 当前缺口：独立正式数据字典、训练/测试划分、正式评分标签、部分标准全文、可计算因子冻结包和部分行业资料未齐；组织/设施边界、Scope口径、宽转长正式契约、目录`rule_id`、评分权重和阈值待确认。这些缺口影响M6-B与后续校准，但不改变11行业统一覆盖范围。
 
 ### 主要风险
 
@@ -195,13 +195,15 @@ MVP必须完整保留以下范围，不得因单个成员开发压力而删除�
 - [`DATA_PROFILE.md`](DATA_PROFILE.md)：配套数据初步画像与事实性审计归档。
 - [`DATA_CONTRACT.md`](DATA_CONTRACT.md)：初步审计后的候选数据契约与待确认项。
 - [`DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md`](DATA_AUDIT_REVIEW_AND_FLOW_READINESS.md)：审计复核、问题完善顺序和流程软件准备清单。
-- [`DEVELOPMENT_REVIEW.md`](DEVELOPMENT_REVIEW.md)：M1/M2成果审查、产品模块、技术栈与实际接入状态。
+- [`DEVELOPMENT_REVIEW.md`](DEVELOPMENT_REVIEW.md)：M1—M5成果审查、产品模块、技术栈与实际接入状态。
 - [`POLICY_RULES_REVIEW.md`](POLICY_RULES_REVIEW.md)：政策标准与行业规则交付审查、M5候选知识源和整改门槛。
 - [`../团队成果/03_数据政策评分/19_补充政策文献与国家因子库接收审查.md`](../团队成果/03_数据政策评分/19_补充政策文献与国家因子库接收审查.md)：补充政策标准、中文文献、铜行业条款和国家因子库的接收结论与使用边界。
 - [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md)：项目物理目录、十模块导航和文件权威层级。
 - [`DEVELOPMENT_BRIEF.md`](DEVELOPMENT_BRIEF.md)：02开发契约、M2基线和阶段边界。
 - [`M3_DEVELOPMENT_PROMPT.md`](M3_DEVELOPMENT_PROMPT.md)：02实施M3专业Agent工作台的正式提示词。
 - [`M5_DEVELOPMENT_PROMPT.md`](M5_DEVELOPMENT_PROMPT.md)：02实施M5可追溯知识检索层的正式提示词。
+- [`M5_DEVELOPMENT_REVIEW.md`](M5_DEVELOPMENT_REVIEW.md)：M5终审、测试和正式采纳记录。
+- [`M6_DEVELOPMENT_PROMPT.md`](M6_DEVELOPMENT_PROMPT.md)：02实施M6活动数据标准化与碳核算基础层的正式提示词。
 - [`TEAM_ROLES.md`](TEAM_ROLES.md)：固定Codex对话、5人动态分工和成果审查机制。
 - [`TASK_BOARD.md`](TASK_BOARD.md)：可选的简要待办清单。
 - [`SKILLS_MANIFEST.md`](SKILLS_MANIFEST.md)：Skills清单、作用和替代方案。

@@ -169,3 +169,56 @@ export type WorkflowList = {
   workflows: WorkflowCheckpoint[];
   notice: string;
 };
+
+export type KnowledgeSearchResult = {
+  result_type: 'chunk' | 'source_metadata' | string;
+  source_id: string;
+  document_id?: string | null;
+  chunk_id?: string | null;
+  title: string;
+  publisher?: string | null;
+  version?: string | null;
+  locator?: string | null;
+  excerpt?: string | null;
+  source_role: string;
+  verification_status: string;
+  visibility: string;
+  use_boundary: string;
+  official_url?: string | null;
+  industry_scope: string[];
+  match_tier: number;
+  date_uncertain?: boolean;
+};
+
+export type KnowledgeSearchResponse = {
+  retrieval_id: string;
+  assessment_run_id: string;
+  workspace_id: string;
+  enterprise_id: string;
+  enterprise_code: string;
+  index_version_id: string;
+  allowlist_version: string;
+  knowledge_as_of: string;
+  industry_scope: string[];
+  query: string;
+  results: KnowledgeSearchResult[];
+  warnings: string[];
+  degraded_mode?: string | null;
+  data_notice: string;
+  untrusted_content?: boolean;
+  execution_boundary?: string;
+};
+
+export type KnowledgeIndexStatus = {
+  available: boolean;
+  fts5_available: boolean;
+  index_version_id?: string;
+  allowlist_version?: string;
+  manifest_hash?: string;
+  built_at?: string;
+  searchable_candidate_count?: number;
+  metadata_only_count?: number;
+  diagnostic_only_count?: number;
+  blocked_count?: number;
+  notice?: string;
+};

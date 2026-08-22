@@ -9,6 +9,8 @@ import type {
   SourceBatch,
   Workspace,
   WorkflowCheckpoint,
+  KnowledgeIndexStatus,
+  KnowledgeSearchResponse,
   WorkflowList,
 } from './contracts';
 
@@ -61,6 +63,14 @@ export const api = {
   listAttachments: (runId: string) => request<{ attachments: Attachment[] }>(`/assessment-runs/${runId}/attachments`),
   getModels: () => request<{ models: ModelOption[]; external_configured: boolean; default_model_id?: string | null }>('/models'),
   getParserCapabilities: () => request<Record<string, unknown>>('/parsers/capabilities'),
+  getKnowledgeIndex: () => request<KnowledgeIndexStatus>('/knowledge/indexes/current'),
+  searchKnowledge: (runId: string, query: string, topK = 5, sourceRoles: string[] = [], signal?: AbortSignal) => request<KnowledgeSearchResponse>(`/assessment-runs/${runId}/knowledge/search`, {
+    method: 'POST',
+    signal,
+    body: JSON.stringify({ query, top_k: topK, source_roles: sourceRoles }),
+  }),
+  getKnowledgeChunk: (runId: string, chunkId: string) => request<Record<string, unknown>>(`/assessment-runs/${runId}/knowledge/chunks/${chunkId}`),
+  listKnowledgeRetrievals: (runId: string) => request<{ assessment_run_id: string; retrievals: Array<Record<string, unknown>> }>(`/assessment-runs/${runId}/knowledge/retrievals`),
   turn: (runId: string, content: string, modelId?: string) => request<ConversationResponse>(`/assessment-runs/${runId}/conversation/turn`, {
     method: 'POST',
     body: JSON.stringify({ content, ...(modelId ? { model_id: modelId } : {}), mode: modelId ? 'auto' : 'offline' }),

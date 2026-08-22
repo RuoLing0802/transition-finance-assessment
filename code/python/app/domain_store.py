@@ -14,7 +14,7 @@ from .config import APPLICATION_DATA_ROOT, REQUIRED_HEADERS, SIMULATED_DATA_NOTI
 from .parsers.multimodal import safe_filename
 
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 7
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,24}-[A-Za-z0-9_-]{2,80}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 COMPARABLE_RUN_STATUSES = {"completed", "archived"}
@@ -303,6 +303,218 @@ class DomainStore:
                     PRAGMA user_version = 5;
                     """
                 )
+            if version < 6:
+                connection.executescript(
+                    """
+                    CREATE TABLE IF NOT EXISTS knowledge_sources (
+                        source_uid TEXT PRIMARY KEY,
+                        source_id TEXT NOT NULL,
+                        canonical_source_id TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        publisher TEXT,
+                        document_no_or_standard_no TEXT,
+                        source_role TEXT NOT NULL,
+                        version TEXT,
+                        published_at TEXT,
+                        effective_at TEXT,
+                        expires_at TEXT,
+                        region TEXT,
+                        industry_scope_json TEXT NOT NULL,
+                        official_url TEXT,
+                        verification_status TEXT NOT NULL,
+                        admission_status TEXT NOT NULL,
+                        visibility TEXT NOT NULL,
+                        use_boundary TEXT NOT NULL,
+                        supersedes_source_id TEXT,
+                        asset_id TEXT,
+                        document_id TEXT,
+                        mapping_method TEXT,
+                        record_hash TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_knowledge_sources_id
+                        ON knowledge_sources(source_id, updated_at DESC);
+                    CREATE INDEX IF NOT EXISTS idx_knowledge_sources_visibility
+                        ON knowledge_sources(visibility, source_role, source_id);
+                    CREATE TABLE IF NOT EXISTS knowledge_documents (
+                        document_id TEXT PRIMARY KEY,
+                        source_id TEXT NOT NULL,
+                        source_uid TEXT NOT NULL,
+                        file_name TEXT,
+                        relative_path TEXT NOT NULL,
+                        sha256 TEXT NOT NULL,
+                        mime_type TEXT,
+                        page_count INTEGER,
+                        text_status TEXT,
+                        parser_version TEXT NOT NULL,
+                        received_at TEXT,
+                        is_original_immutable INTEGER NOT NULL DEFAULT 1,
+                        visibility TEXT NOT NULL
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_knowledge_documents_source
+                        ON knowledge_documents(source_id, sha256);
+                    CREATE TABLE IF NOT EXISTS knowledge_chunks (
+                        chunk_id TEXT PRIMARY KEY,
+                        document_id TEXT NOT NULL,
+                        source_id TEXT NOT NULL,
+                        chunk_type TEXT NOT NULL,
+                        title TEXT,
+                        section_title TEXT,
+                        page_start INTEGER,
+                        page_end INTEGER,
+                        clause_no TEXT,
+                        table_no TEXT,
+                        locator TEXT,
+                        text TEXT NOT NULL,
+                        normalized_search_text TEXT NOT NULL,
+                        content_hash TEXT NOT NULL,
+                        verification_status TEXT NOT NULL,
+                        visibility TEXT NOT NULL,
+                        use_boundary TEXT NOT NULL,
+                        industry_scope_json TEXT NOT NULL,
+                        source_role TEXT NOT NULL,
+                        official_url TEXT,
+                        publisher TEXT,
+                        version TEXT
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_source
+                        ON knowledge_chunks(source_id, chunk_id);
+                    CREATE TABLE IF NOT EXISTS knowledge_index_versions (
+                        index_version_id TEXT PRIMARY KEY,
+                        allowlist_version TEXT NOT NULL,
+                        manifest_hash TEXT NOT NULL,
+                        extractor_version TEXT NOT NULL,
+                        chunker_version TEXT NOT NULL,
+                        tokenizer_version TEXT NOT NULL,
+                        built_at TEXT NOT NULL,
+                        source_count INTEGER NOT NULL,
+                        document_count INTEGER NOT NULL,
+                        chunk_count INTEGER NOT NULL,
+                        searchable_candidate_count INTEGER NOT NULL,
+                        metadata_only_count INTEGER NOT NULL,
+                        diagnostic_only_count INTEGER NOT NULL,
+                        blocked_count INTEGER NOT NULL,
+                        ranking_config_hash TEXT NOT NULL,
+                        build_status TEXT NOT NULL,
+                        error_summary TEXT NOT NULL,
+                        is_current INTEGER NOT NULL DEFAULT 0
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_knowledge_index_current
+                        ON knowledge_index_versions(is_current, built_at DESC);
+                    CREATE TABLE IF NOT EXISTS knowledge_index_members (
+                        index_version_id TEXT NOT NULL,
+                        entry_id TEXT NOT NULL,
+                        entry_type TEXT NOT NULL,
+                        source_uid TEXT NOT NULL,
+                        source_id TEXT NOT NULL,
+                        chunk_id TEXT,
+                        visibility TEXT NOT NULL,
+                        verification_status TEXT NOT NULL,
+                        use_boundary TEXT NOT NULL,
+                        ranking_config_hash TEXT NOT NULL,
+                        included_at TEXT NOT NULL,
+                        PRIMARY KEY(index_version_id, entry_id)
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_knowledge_members_lookup
+                        ON knowledge_index_members(index_version_id, visibility, source_id);
+                    CREATE TABLE IF NOT EXISTS knowledge_admission_decisions (
+                        decision_id TEXT PRIMARY KEY,
+                        allowlist_version TEXT NOT NULL,
+                        source_id TEXT NOT NULL,
+                        asset_id TEXT,
+                        document_id TEXT,
+                        visibility TEXT NOT NULL,
+                        decision_basis TEXT NOT NULL,
+                        decision_source_file TEXT NOT NULL,
+                        decision_source_row INTEGER,
+                        mapping_method TEXT NOT NULL,
+                        decided_at TEXT NOT NULL,
+                        supersedes_decision_id TEXT
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_knowledge_admission_source
+                        ON knowledge_admission_decisions(source_id, decided_at DESC);
+                    CREATE TABLE IF NOT EXISTS knowledge_governance_records (
+                        governance_record_id TEXT PRIMARY KEY,
+                        record_type TEXT NOT NULL,
+                        source_record_id TEXT NOT NULL,
+                        industry TEXT,
+                        status TEXT NOT NULL,
+                        issue_summary TEXT NOT NULL,
+                        required_action TEXT NOT NULL,
+                        source_workbook TEXT NOT NULL,
+                        source_row INTEGER,
+                        content_hash TEXT NOT NULL,
+                        text TEXT NOT NULL,
+                        chunk_id TEXT,
+                        visibility TEXT NOT NULL,
+                        updated_at TEXT NOT NULL
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_knowledge_governance_status
+                        ON knowledge_governance_records(status, industry, source_record_id);
+                    CREATE TABLE IF NOT EXISTS knowledge_retrieval_logs (
+                        retrieval_id TEXT PRIMARY KEY,
+                        workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                        assessment_run_id TEXT NOT NULL REFERENCES assessment_runs(assessment_run_id),
+                        enterprise_id TEXT NOT NULL REFERENCES enterprise_profiles(enterprise_id),
+                        thread_id TEXT NOT NULL,
+                        query_hash TEXT NOT NULL,
+                        query_summary TEXT NOT NULL,
+                        industry_filter TEXT,
+                        knowledge_as_of TEXT NOT NULL,
+                        index_version_id TEXT NOT NULL,
+                        returned_chunk_ids TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        retrieval_mode TEXT NOT NULL,
+                        fallback_reason TEXT
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_knowledge_retrieval_run
+                        ON knowledge_retrieval_logs(assessment_run_id, created_at DESC, retrieval_id);
+                    CREATE TABLE IF NOT EXISTS assessment_run_knowledge_context (
+                        assessment_run_id TEXT PRIMARY KEY REFERENCES assessment_runs(assessment_run_id),
+                        workspace_id TEXT NOT NULL REFERENCES workspaces(workspace_id),
+                        enterprise_id TEXT NOT NULL REFERENCES enterprise_profiles(enterprise_id),
+                        thread_id TEXT NOT NULL UNIQUE,
+                        knowledge_as_of TEXT NOT NULL,
+                        index_version_id TEXT NOT NULL,
+                        allowlist_version TEXT NOT NULL,
+                        ranking_config_hash TEXT NOT NULL,
+                        tokenizer_version TEXT NOT NULL,
+                        industry_mapping_version TEXT NOT NULL,
+                        industry_synonym_hash TEXT NOT NULL,
+                        source_manifest_hash TEXT NOT NULL,
+                        frozen_at TEXT NOT NULL
+                    );
+                    """
+                )
+                try:
+                    connection.execute(
+                        """CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_fts USING fts5(
+                            entry_id UNINDEXED,
+                            index_version_id UNINDEXED,
+                            source_id UNINDEXED,
+                            title,
+                            standard_no,
+                            section_title,
+                            body,
+                            normalized_search_text
+                        )"""
+                    )
+                except sqlite3.OperationalError:
+                    # M5 retrieval has a deterministic non-FTS fallback for
+                    # SQLite builds that omit the optional FTS5 extension.
+                    pass
+                connection.execute("PRAGMA user_version = 6")
+            if version < 7:
+                # M5 uses this flag to distinguish an explicit effective date
+                # from a year-only record; year-only records must not be
+                # silently interpreted as January 1.
+                try:
+                    connection.execute("ALTER TABLE knowledge_sources ADD COLUMN date_uncertain INTEGER NOT NULL DEFAULT 0")
+                except sqlite3.OperationalError as exc:
+                    if "duplicate column name" not in str(exc).lower():
+                        raise
+                connection.execute("PRAGMA user_version = 7")
 
     @staticmethod
     def _workspace(row: sqlite3.Row) -> dict[str, Any]:
