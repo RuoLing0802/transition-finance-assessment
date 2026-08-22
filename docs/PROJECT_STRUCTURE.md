@@ -1,7 +1,7 @@
 # 项目目录与十模块导航
 
-**版本**：v1.0
-**日期**：2026-08-20
+**版本**：v1.1
+**日期**：2026-08-22
 **用途**：说明物理目录、十个产品模块和文件权威层级；不改变现有程序包、接口或MVP范围
 
 ## 1. 整理原则
@@ -44,11 +44,11 @@
 | 2. 企业画像与事实层 | 基本信息、能耗、经营、设备、产品和诉求 | `code/python/app/m1_core.py`、`domain_store.py`、`docs/DATA_PROFILE.md` | 已接入基础版 |
 | 3. 数据质量与证据链 | 结构校验、缺失/异常、证据定位和人工复核 | `m1_core.py`、`parsers/`、`docs/DATA_CONTRACT.md` | 已接入基础版，正式字典待确认 |
 | 4. 能耗与碳排放测算 | 折标、因子、Scope边界和可回放计算 | `docs/POLICY_RULES_REVIEW.md`及钟同学因子材料 | 尚未接入正式计算器；自动因子0条 |
-| 5. 行业规则与行业对标 | 转型目录、行业标准、基准、规则版本 | `团队成果/钟同学/05_行业规则与行业对标/`、`docs/POLICY_RULES_REVIEW.md` | 候选知识/规则资产已到达，待规范化 |
+| 5. 行业规则与行业对标 | 转型目录、行业标准、基准、规则版本 | `团队成果/钟同学/05_行业规则与行业对标/`、`docs/POLICY_RULES_REVIEW.md`、`docs/M5_DEVELOPMENT_PROMPT.md` | 候选知识已完成记录级治理；行业对标规则仍未接入 |
 | 6. 转型行为与路径识别 | 行为、缺口、候选路径和依据 | 当前目录候选匹配、铜路径候选表 | 尚未正式接入 |
 | 7. 转型评分与信贷支持 | 评分、红旗、材料清单和信贷辅助建议 | `docs/PROJECT_PLAN.md`中的专业判断初稿 | 未接入，权重/阈值待确认 |
 | 8. 评估会话与模型调度 | 会话、工作流、工具、人工确认和离线回退 | `code/python/app/orchestration/`、`workflows/` | 已接入M4基线 |
-| 9. 多模态材料与知识接入 | PDF/DOCX/图片解析、政策知识检索 | `code/python/app/parsers/`、M5候选知识源 | 解析适配已接入；知识检索待M5 |
+| 9. 多模态材料与知识接入 | PDF/DOCX/图片解析、政策知识检索 | `code/python/app/parsers/`、`docs/M5_DEVELOPMENT_PROMPT.md`、M5候选知识源 | 解析适配已接入；M5说明完成、开发待授权 |
 | 10. 持久化、对比与输出 | 工作空间、运行、检查点、对比、报告和桌面入口 | `domain_store.py`、`reporting.py`、`desktop/`、`packaging/` | 已接入M4基础版；Windows/报告扩展后置 |
 
 技术栈和实际接入状态的完整矩阵以[`DEVELOPMENT_REVIEW.md`](DEVELOPMENT_REVIEW.md)为准。本导航只帮助定位，不替代该审查文档或唯一正式总体计划[`PROJECT_PLAN.md`](PROJECT_PLAN.md)。
